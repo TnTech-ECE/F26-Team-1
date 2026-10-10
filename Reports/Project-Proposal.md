@@ -295,7 +295,33 @@ After passing inspection, the main measure of success will be earning points and
 
 ### Budget
 
-\[estimated BOM, to be completed after conceptual design\]  
+# Expected Bill of Materials
+
+| Item | Expected Cost Per Item | Expected Quantity | Expected Cost |
+|---|---:|---:|---:|
+| **Power System** | | | |
+| Lithium Battery | $50.00 | 1 | $50.00 |
+| Buck Converters (12V to 5V / 12V to 3.3V) | $13.00 | 2 | $26.00 |
+| **Master Controller** | | | |
+| Microcontroller Development Board | $80.00 | 1 | $80.00 |
+| PCB (w/ connectors & standoffs) | $80.00 | 1 | $80.00 |
+| **Camera / Vision Processing** | | | |
+| OpenMV camera | $180.00 | 1 | $180.00 |
+| **Navigation Inputs** | | | |
+| Time-Of-Flight ranging sensor (for boundry detection) | $8.00 | 2 | $16.00 |
+| Matrix Distance Sensor (for obstacle detection) | $30.00 | 1 | $30.00 |
+| Tracking Wheel & Encoder (for odometry) | $80.00 | 2 | $160.00 |
+| **Flag & Tire Actuators** | | | |
+| Servo Motors | $11.67 | 5 | $58.33 |
+| Stepper Motor & Driver | $15.00 | 1 | $15.00 |
+| **Motor Control** | | | |
+| Motor | $15.00 | 4 | $60.00 |
+| Dual H Bridge Motor Driver | $13.00 | 2 | $26.00 |
+| **Miscellaneous** | | | |
+| Switches (emergency stop, start sutton, status LEDs) | $50.00 | 1 | $50.00 |
+| Wiring & integration | $40.00 | 1 | $40.00 |
+| **Expected Total** | | | **$871.33** |
+
 Along with an estimated Bill of Materials, using the previous SECON robots’ BOM can serve as a good reference point for the cost of this project. The electrical design constraints for the Hardware Competition are largely consistent year-to-year \[3\]\[25\]. Cost drivers remain similar, so previous team’s component costs are a reasonable benchmark. The electrical systems for the Fall 2025 and Fall 2024 Capstone SECON robots’ cost \[some amount\] \[5\] and \$1025.72 \[6\], respectively.
 
 ### Personnel
