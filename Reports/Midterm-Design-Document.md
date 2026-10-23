@@ -13,11 +13,11 @@ This proposal presents the planned development of the autonomous robot’s elect
 
 ## Formulating the Problem
 
-The customers for this project are the TTU ECE department and Dr. Storm, the Fall 2026 Capstone instructor. The TTU ECE department, Tennessee Tech IEEE Club, and the mechanical SECON team are all stakeholders this project. As this team represents TTU in the competition, the TTU ECE department and IEEE Club have an interest in how high the team places in the competition. The success of the mechanical portion of the robot will depend on how well the electrical/computer portion is designed, so they are also direct stakeholders in the success of this project. The 2027 IEEE Stock Car Race competition requires a fully autonomous robot to complete three laps around a track within three minutes, do a pit stop, and park within a designated location after completing the race [4]. 
+The customers for this project are the TTU ECE department and Dr. Storm, the Fall 2026 Capstone instructor. The TTU ECE department, Tennessee Tech IEEE Club, and the mechanical SECON team are all stakeholders in this project. As this team represents TTU in the competition, the TTU ECE department and IEEE Club have an interest in how high the team places in the competition. The success of the mechanical portion of the robot will depend on how well the electrical/computer portion is designed, so they are also direct stakeholders in the success of this project. The 2027 IEEE Stock Car Race competition requires a fully autonomous robot to complete three laps around a track within three minutes, do a pit stop, and park within a designated location after completing the race [4]. 
 
-Completing the race on time awards 100 points and one additional point is earned for every full 10 seconds by which the robot finishes early, up to a maximum of \[X\] points \[4\]. Additionally, 25 points are awarded just by entering the course \[4\]. The bulk of the points are awarded through a variety of mid-race assignments the robot completes. For instance, the robot must be able to read an AprilTag fixed on the arena, and that reveals which of the three zones the robot needs to make a pit stop at and where it needs to park when it finishes the race for additional points \[4\]. The race begins when the referee raises a green flag, and 10 points are awarded if the robot starts on time \[4\].
+Completing the race in 3 minutes or less awards 100 points, and crossing the finish line in under 2 minutes and 45 seconds awards an additional 30 points \[4\]. The bulk of the points are awarded through a variety of mid-race assignments the robot completes. For instance, the robot must be able to read an AprilTag fixed on the arena, and that reveals which of the three zones the robot needs to make a pit stop at and where it needs to park when it finishes the race for additional points \[4\]. The race begins when the referee raises a green flag, and 10 points are awarded if the robot starts on time \[4\].
 
-At the start of the game, every robot will be holding a tire and must fit within a 12 in x 12 in x 12 in space \[3\]. Robots are allowed to expand past that area once the game starts \[3\]. Between laps one and two or two and three, the robot must make a pit stop where points are awarded for dropping the tire in the correct zone indicated by the AprilTag \[4\]. Additional points are then awarded if the robot picks up a different tire before leaving the pit. Up to 15 points are earned by the robot for entering the pit, but the full points cannot be earned unless it stops for a minimum of two seconds in the pit \[4\]. The final major assignment the robot needs to do to earn points is raising the school flag during the final lap \[4\].
+At the start of the race, every robot will be holding a red spare tire and must fit, tire included, within a 12 in × 12 in × 12 in space \[3, R01\]\[4, App. G\]. Robots are allowed to expand past that area once the race starts \[3, R01\]. Between laps one and two or two and three, the robot must make a pit stop, where it drops off the red tire and picks up a different blue tire \[4, App. G\]. Doing so in the pit box assigned by the AprilTag earns 25 points for the drop-off and 40 points for the pickup, while using any other pit box earns only 12 and 20 points, and the pickup points are lost if the robot drops the blue tire before crossing the finish line \[4, App. G\]. The final major assignment the robot needs to do to earn points is raising the school flag during the final lap \[4\].
 
 The competition is not just about finishing the race in three minutes. A myriad of assignments must be completed during the race to earn every point possible. The robot must perceive its environment, track its own progress, and manipulate game elements throughout the race. Therefore, the problem is defined by the following requirements:
 
@@ -47,7 +47,7 @@ While solutions exist for individual tasks, there is no known off-the-shelf solu
 
 ## Specifications and Constraints
 
-This section defines the requirements the robot must meet. "Shall" marks a mandatory requirement and "may" marks an optional one. Each requirement is written to be measurable, and each specification lists how it will be verified.
+This section defines the requirements the robot must meet. "Shall" marks a mandatory requirement, "should" marks a goal the team intends to meet, and "may" marks an optional one. Each requirement is written to be measurable, and each specification lists how it will be verified.
 
 Specifications come from the project's stakeholders: The ECE department and Dr. Storm. Their shared goal is to place competitively in the IEEE Southeast Conference (SECON) 2027 Hardware Competition.
 
@@ -72,7 +72,7 @@ The objective specifications define the performance the stakeholders require of 
 | OS-5 | The robot shall reach a ready-to-start state within 60 s of power-on \[3, Sec. 7.2\]. | Timed power-on to ready-indicator tests. |
 | OS-6 | The robot shall operate for no less than 15 min† on a single battery charge \[3, Sec. 7.1\]. | Continuous runtime test from full charge. |
 | OS-7 | The robot shall pass official inspection on the first attempt \[3, Sec. 6.1\]. | Mock inspection per the Appendix A checklist prior to travel. |
-| OS-8 | Total project cost shall not exceed $\[X\]. | Tracked bill of materials and purchase records. |
+| OS-8 | Total project cost shall not exceed $1,200. | Tracked bill of materials and purchase records. |
 
 #### Robot Specifications
 
@@ -97,13 +97,13 @@ The robot specifications define the physical, electrical, and interface requirem
 
 #### Board Specifications
 
-The competition field and game elements are described and specified in Game Manual 2 \[4, Sec. 3.3.1\], which has not been fully released at this current time. Table III states the requirements are applicable at this time and remaining board specifications will be incorporated upon the finalized competition rule set.
+The competition field and game elements are described and specified in Game Manual 2 \[4\]. Table III states the requirements for the team's practice board and game elements.
 
 **TABLE III: BOARD SPECIFICATIONS BASED ON STAKEHOLDERS AND TEAM**
 
 | ID   | Requirement                                                                                                                                       | Verification                                 |
 |------|---------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------|
-| BS-1 | Field dimensions, surface, Game Elements, and scoring shall be incorporated from Game Manual 2 upon its release \[4, Sec. 3.3.1\].                | Document revision upon final publication.    |
+| BS-1 | The practice board shall be built on a 4 ft × 8 ft, 23/32 in RTD sheathing base per the GM2 field description and bill of materials, with obstacle quadrants laid out per Appendix E \[4, Sec. 3.2, App. B, App. E\]. | Dimensional inspection against GM2 drawings and Appendix E. 
 | BS-2 | The practice board shall replicate the GM2 Field dimensions to within ±0.125in.                                                                   | Dimensional inspection against GM2 drawings. |
 | BS-3 | Practice Game Elements shall match GM2 dimensions and materials in \[4\].                                                                         | Comparison against specifications.           |
 | BS-4 | The practice board may be constructed in sections for transport. Practice boards are not permitted in the competition Pit Area \[3, Sec. 3.3.1\]. | ---                                          |
@@ -859,7 +859,7 @@ The odometry system shall:
 
 Measure forward travel, sideways travel, and heading.
 
-Estimate position within [X] cm over the length of a lane change.
+Estimate position within ±1 cm over the length of a lane change.
 
 Track correctly at the robot’s maximum speed.
 
@@ -1127,7 +1127,7 @@ What guides the robot’s development and team practices is safety, reliability,
 
 ### Division of Labor
 
-Each team member will still be responsible for managing a subsystem and its detailed design documentation. That stated, major subsystem tasks can still be broken down, prioritized, and delegated as they need to be completed by whoever is most available and whose experience matches the task. For example, a single team member may be responsible for the research and documentation of a specific subsystem, however any team member may work on the implementation of that subsystem. The mechanical engineering team will be
+Each team member will still be responsible for managing a subsystem and its detailed design documentation. That stated, major subsystem tasks can still be broken down, prioritized, and delegated as they need to be completed by whoever is most available and whose experience matches the task. For example, a single team member may be responsible for the research and documentation of a specific subsystem, however any team member may work on the implementation of that subsystem. The mechanical engineering team will be responsible for the chassis, drivetrain, and actuator mechanisms, with electrical interfaces defined jointly between the two teams.
 
 | Team Member | Subsystem Detailed Design |
 | --- | --- |
