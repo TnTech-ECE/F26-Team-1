@@ -67,8 +67,8 @@ The objective specifications define the performance the stakeholders require of 
 |---|---|---|
 | OS-1 | The robot shall complete all game tasks autonomously, with no human input following the start command \[3, Sec. 3.3.1\]. | Full practice runs with no operator contact after start. |
 | OS-2 | The robot shall complete its full task sequence within the 180 s match period \[3, Sec. 3.3.1\]. | Timed practice runs. |
-| OS-3 | The robot shall score no fewer than \[X\] points per match. | Refereed practice runs scored per the GM2 \[4\] rules. |
-| OS-4 | The robot shall complete a full match without failure in at least 9 of 10 consecutive practice runs. | Test log of consecutive runs. |
+| OS-3 | The robot should score no fewer than 275 points in at least 6 of 10 practice runs (PT-2). | Score log from the final round of practice runs, per the Performance Targets section. |
+| OS-4 | The robot shall score no fewer than 175 points, with no Red Card, in at least 8 of 10 practice runs (PT-1). | Score log from the final round of practice runs, per the Performance Targets section. |
 | OS-5 | The robot shall reach a ready-to-start state within 60 s of power-on \[3, Sec. 7.2\]. | Timed power-on to ready-indicator tests. |
 | OS-6 | The robot shall operate for no less than 15 min† on a single battery charge \[3, Sec. 7.1\]. | Continuous runtime test from full charge. |
 | OS-7 | The robot shall pass official inspection on the first attempt \[3, Sec. 6.1\]. | Mock inspection per the Appendix A checklist prior to travel. |
@@ -293,6 +293,42 @@ After passing inspection, the main measure of success will be earning points and
 | Intentional Technician contact with the Field      | *Red card*                                                       |
 | Interference with another Team                     | *Red card*, likely disqualification                              |
 | Egregious behavior                                 | *Yellow card*; *Red card* if repeated, possible disqualification |
+
+### Performance Targets
+
+The point breakdown above defines the possible rewards the robot can receive during the competition. This section defines specific goals for the robot and the metrics it will be rated against. The targets are divided into three tiers using the same requirement language as the *Specifications and Constraints* section: "shall" statements are the baseline goals that are mandatory for the final design, "should" statements mark targets the team intends to meet, and "may" statements are stretch objectives. Structuring goals this way lays out the robot's core function, completing the race on time and within constraints, before the design phase moves on to the high-risk pit stop and tire exchange tasks.
+
+All score thresholds are derived from the point values in the revised Game Manual 2 \[4\]. The time bonus and the publicity contest are excluded from the thresholds so that the robot is graded purely on its performance on the course. Thresholds are set below the sum of their tasks so that a single minor contact does not cause an otherwise successful run to fail.
+
+#### Verification Method
+
+Performance targets will be verified during a final round of 10 practice runs on a practice board built to BS-2, using Game Elements that meet BS-3. Each run will be scored according to Game Manual 2 \[4\], with the completion time and any contact events noted for each run. The occupied obstacle quadrants and the AprilTag-assigned pit box will be randomized between runs to match competition conditions. Any run that receives a Red Card is counted as a failed run regardless of score.
+
+#### Tiered Performance Targets
+
+Every match begins with entering the course, starting on the green flag, and completing three laps within 180 s, which together are worth 135 points \[4\]. Each tier builds on these core tasks.
+
+**TABLE VIII: TIERED PERFORMANCE TARGETS**
+
+| ID   | Tier     | Requirement                                                                                                                                                  | Verification                                   | Stakeholder Need                                                |
+|------|----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------|-----------------------------------------------------------------|
+| PT-1 | Baseline | The robot shall score no fewer than 175 points in at least 8 of 10 practice runs, earning the 135 core points and at least 40 points from contact-free laps. | Score log from the final round of practice runs. | A reliable entry that represents TTU in the competition.        |
+| PT-2 | Target   | The robot should score no fewer than 275 points in at least 6 of 10 practice runs.                                                                          | Score log from the final round of practice runs. | Competitive placement for the TTU ECE department and IEEE Club. |
+| PT-3 | Stretch  | The robot may complete the pit stop, full tire exchange, and school flag tasks in a single run, for a score of up to 390 points.                             | Best-scoring run in the final round.           | Maximum robot-earned score.                                     |
+
+The "Target" tier can be reached through more than one combination of tasks. A robot that completes three contact-free laps and stops in the correct pit box for at least 2 s earns 285 points. A robot that deposits the red tire in the correct pit box but contacts an obstacle on one lap also earns 285 points. This flexibility allows the team to prioritize the tasks that are the most reliable during testing without failing the target.
+
+#### Supporting Performance Targets
+
+**TABLE IX: SUPPORTING PERFORMANCE TARGETS**
+
+| ID   | Requirement                                                                                                                              | Verification                     | Stakeholder Need                                             |
+|------|------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------|--------------------------------------------------------------|
+| PT-4 | The robot should complete three laps in no more than 160 s, providing 20 s of margin below the 180 s limit \[4\].                        | Stopwatch timing of each run.    | Completion margin against mechanical or navigation delays.   |
+| PT-5 | The robot shall receive no Red Cards across the final round of practice runs \[3, C03\].                                                 | Score log of each run.           | Rule compliance required by the SECON Game Design Committee. |
+| PT-6 | The robot should receive no Yellow Cards, including those caused by a premature start, across the final round of practice runs \[3\]\[4\]. | Score log of each run.           | Rule compliance and protection against Red Card escalation.  |
+
+In Capstone II, the "shall" targets PT-1 and PT-5 will serve as the pass/fail criteria for performance verification. The "should" and "may" targets will be reported as measured results and used to evaluate how competitive the robot is relative to the full scoring potential of the game.
 
 ## Resources
 
