@@ -1,5 +1,5 @@
 # Midterm Design Document
-The following document is Team 1's Midterm Design Document, comprised of the team's Project Proposal & Conceptual Design
+The following document is Fall 2026 Capstone Team 1's Midterm Design Document, comprised of the team's Project Proposal & Conceptual Design.
 
 # Project Proposal
 
@@ -160,7 +160,12 @@ Robot constraints are defined as bound by the physical and electrical design of 
 
 #### IEEE Constraints
 
-IEEE constraints go to address the conduct, safety, eligibility, and documentation requirements imposed by the IEEE and SECON. This goes to keep the public welfare and societal considerations kept in mind while designing.
+The IEEE Code of Ethics [32] governs how the team works. Article I.1 requires members to hold paramount the safety, health, and welfare of the public and to disclose promptly any factor that might endanger others. Article I.5 requires honest criticism of technical work, acknowledgment and correction of errors, realistic claims based on available data, and proper credit to contributors.
+
+ISO 13850 [33] defines the principles for the emergency stop referenced in Game Manual 1. The standard requires a red actuator on a yellow background, a direct-opening action with mechanical latching, and an emergency stop that remains available at all times and overrides every other function. It also requires that resetting the device does not restart the machine.
+
+IEC 62133-2 [34] covers the safety of portable lithium cells and batteries and underlies the battery-handling rule C08 and constraint IC-9. Published certification reports show typical declared values of 4.20 V maximum charge voltage per cell, a 3.0 V final discharge voltage per cell, and a charging temperature window of roughly 0–45 °C, though each manufacturer declares its own. For a three-cell pack, these correspond to a 12.6 V charge limit and a 9.0 V discharge floor. The standard also requires that voltage, current, and temperature be managed, which the fuse or battery management system in IC-9 satisfies.
+
 
 ##### Conduct and Event Safety
 
@@ -211,6 +216,10 @@ Two Image Processing (IP) tasks are required for this project: detecting when th
 
 Additionally, an alternative approach is to use the OpenMV IDE with Python-based image processing and its AprilTags API \[15\]. OpenMV provides built-in support for AprilTag detection, allowing the camera to identify and decode tags directly on the embedded vision platform. This approach can simplify the system architecture by performing both image acquisition and AprilTag detection on the OpenMV device without requiring a separate Jetson module.
 
+A third approach is to use the OpenCV library on a single-board computer such as a Raspberry Pi. OpenCV’s ArUco module supports predefined AprilTag dictionaries, including the tag36h11 family, so tags can be detected and decoded entirely in software [26]. The green starting flag can be detected with the same library by converting each frame to the HSV color space, thresholding the green hue range, and applying morphological filtering to remove noise. To prevent false triggers from other green objects in the scene, the system would require the detected blob to exceed a minimum area and persist across several consecutive frames before signaling the start. This approach is low-cost, well documented, and easy to prototype on a laptop before deployment. 
+
+A fourth approach is to use a dedicated smart vision module that performs image processing on-board and sends only the results to the main controller. The Pixy2 camera performs color-based object detection and reports the position and size of detected color blocks over a serial interface such as SPI, I2C, or UART [17]. This makes it well suited to detecting the green starting flag with very little processing on the main controller. Because the Pixy2 does not decode AprilTags, pit stop identification would be handled by a second camera running an AprilTag detection library [18]. Alternatively, an all-in-one computer vision module such as the HuskyLens AI vision sensor offers both color recognition and tag recognition on a single device, with results available over UART or I2C [27]. These modules reduce development time and processing load because the vision algorithms are built in. However, they offer less control over the detection pipeline and lower resolution and frame rates than a Jetson or OpenMV platform [14], [15], and the split-camera setup adds hardware and integration complexity.
+
 ### Master Control
 
 The robot must complete the track within a three-minute time limit while also being able to stop at designated pit stops. This requirement means the robot software must support computationally intensive processes, most likely involving machine learning and computer vision. Running these processes efficiently therefore demands a hardware controller with sufficient computing power.
@@ -221,6 +230,10 @@ In contrast, competitions such as F1TENTH, an autonomous racing car competition,
 
 Other approaches include pairing a lower-cost single-board computer, such as a Raspberry Pi with a Coral TPU or Intel Neural Compute Stick, to offload ML inference at a fraction of the Jetson's cost, though generally with lower throughput. Some teams also adopt a hybrid architecture, using a microcontroller for low-latency, real-time motor and sensor control alongside a separate companion computer for vision and ML processing — an approach that mirrors the division of labor built into the roboRIO's combined real-time processor and FPGA, but distributes it across two dedicated boards instead of one.
 
+Another option is to use an STM32 microcontroller board as the real-time controller. STM32 is a family of 32-bit Arm Cortex-M microcontrollers from STMicroelectronics, and its Nucleo and Discovery development boards provide hardware timers for PWM motor control, quadrature encoder interfaces, ADCs, and communication peripherals such as UART, SPI, I2C, and CAN [28]. These features suit tasks that require deterministic timing, such as speed control, steering, reading wheel encoders, and braking at a pit stop. Compared with the roboRIO, an STM32 board is smaller, lighter, and much cheaper, and it can be programmed in C/C++ with the STM32Cube tools or in MicroPython. However, a general-purpose STM32 lacks the compute power and memory for heavy computer vision workloads on its own. Higher-end devices such as the STM32H7 series can run small neural networks through ST’s X-CUBE-AI toolchain [29], and newer parts with a dedicated neural processing unit improve this further, but their throughput remains well below that of a Jetson-class module [17].
+
+For this reason, an STM32 is best suited to the hybrid architecture described above, where it handles low-latency motor and sensor control while a companion computer, such as a Jetson or Raspberry Pi, handles AprilTag detection, flag detection, and any machine learning inference. The two boards can exchange high-level commands (for example, target speed, steering angle, or a “stop at pit” flag) over UART, USB, or CAN, so a vision delay never disrupts the motor control loop. This split also adds a safety benefit, since the STM32 can continue to enforce limits or perform an emergency stop if the companion computer stalls. The tradeoff is added integration complexity, including a defined communication protocol, two codebases, and extra wiring and power management.
+
 ### Navigation
 
 The FRC competition centers on known-field trajectory following rather than obstacle-avoiding autonomy, since the field layout is fixed and known in advance. PathPlanner is widely used for this purpose: teams use a GUI to place waypoints and drag Bézier-curve control handles to visually shape the desired path\[18\]. Once a path is defined, PathPlannerLib provides built-in functions that allow the robot to follow the planned trajectory automatically, using feedback control to correct for drift and keep the robot on course.
@@ -229,7 +242,11 @@ F1TENTH, by contrast, does not rely on a pre-planned path in the same way. Becau
 
 Since SECON involves racing along a fixed, predetermined path, Iterative Learning Control (ILC) is another approach worth considering. ILC is designed specifically for this type of scenario: a control system that performs a single, repeated task, using information from prior runs to gradually determine control inputs whose tracking performance exceeds that of traditional feedback-feedforward control \[20\].
 
-Overall, FRC and F1TENTH represent two established navigation approaches: pre-planned trajectory following for known, fixed environments, and SLAM-based localization for environments that are not known in advance. Given SECON's fixed and repeated track layout, methods such as PathPlanner and ILC are the most directly applicable existing solutions to build on.
+Another option well suited to a fixed track is Pure Pursuit, a geometric path-tracking algorithm. The robot follows a pre-defined list of waypoints by repeatedly choosing a lookahead point on the path ahead of it and computing the steering curvature needed to reach that point [30]. Because the path is known in advance, localization can rely on lightweight sensing, such as wheel encoders and an IMU fused with a filter, rather than full SLAM. Drift can be corrected periodically using known landmarks, such as the AprilTags already used for pit stop identification. Pure Pursuit is simple to implement, has few parameters to tune (mainly the lookahead distance and speed), and runs easily on a microcontroller. However, it can cut corners at high speed, and its accuracy depends on the quality of the odometry.
+
+A more advanced option is Model Predictive Control, which is widely used in autonomous racing. At each control step, MPC uses a kinematic or dynamic vehicle model to predict the robot’s motion over a short horizon and solves an optimization problem for the steering and speed commands that best track the reference path while respecting constraints such as maximum speed, steering angle, and acceleration [31]. This lets the robot slow down for tight turns and brake accurately for pit stops, which helps it finish within the three-minute limit. The cost is computation, since the optimization must be solved in real time, along with the need for an accurate vehicle model. It is therefore best suited to running on a companion computer such as a Jetson rather than a small microcontroller.
+
+Overall, FRC and F1TENTH represent two established navigation approaches: pre-planned trajectory following for known, fixed environments, and SLAM-based localization for environments that are not known in advance. Given SECON’s fixed and repeated track layout, methods such as PathPlanner, ILC, Pure Pursuit, and MPC are the most directly applicable existing solutions to build on. Pure Pursuit offers a simple, low-compute baseline, while MPC and ILC offer higher performance at the cost of added complexity and processing demands.
 
 ### Object and Line Detection
 
@@ -238,6 +255,7 @@ As for this year's game board layout, we plan to design the robot to track both 
 To track the gray line beneath the robot, one widely used approach is IR (infrared reflectance) sensors mounted under the robot to measure surface reflectivity and distinguish a dark line from a light background \[21\]. Another possible approach is a downward-facing camera using computer vision. This method allows for real-time calculation of distance and orientation angle relative to the target line.
 
 In both competitions, object detection serves as the critical part of the autonomous vehicle, but it targets completely different challenges tailored to their specific environments. In FRC, object detection focuses heavily on camera vision and geometric tracking; robots utilize neural networks (like YOLOv8) and specialized software (like PhotonVision) to identify dynamic, color-coded game pieces scattered across the floor. Conversely, in F1TENTH, the focus shifts to spatial perception and obstacle avoidance at high speeds, which is also what we desire at SECON 2027. Rather than relying solely on visual colors, F1TENTH cars fuse 2D LiDAR data with stereo depth cameras, using Euclidean clustering algorithms and GPU-accelerated pipelines (on Nvidia Jetson hardware) to instantly detect track boundaries and opponent vehicles so the car can recalculate its racing line or execute a high-speed overtake in milliseconds.
+
 
 ## Measures of Success
 
@@ -472,6 +490,25 @@ The team is required to compete fairly and respect the work and equipment of oth
 [24] System Assessment and Validation for Emergency Responders (SAVER), "First Responder Robotic Sub-Systems (FRROST) Unmanned Aerial Systems (UAS) Focus Group Report," U.S. Dept. Homeland Security, Sci. Technol. Directorate, Washington, DC, USA, Rep. 19June2019-COD-Approved-508, Jun. 2019
 
 [25] N. H. A. R. Ahmad, M. N. A. H. A. N. A. H. et al., "Evaluation of the effectiveness of standard operating procedures in healthcare," *PMC*, PMC6960891, 2019.
+
+[26] OpenCV, “Detection of ArUco Markers,” OpenCV Documentation. [Online]. Available: https://docs.opencv.org/4.x/d5/dae/tutorial_aruco_detection.html.
+
+[27] DFRobot, “HUSKYLENS: An Easy-to-use AI Machine Vision Sensor,” DFRobot Wiki. [Online]. Available: https://wiki.dfrobot.com/HUSKYLENS_V1.0_SKU_SEN0305_SEN0336.
+
+[28] STMicroelectronics, “STM32 32-bit Arm Cortex MCUs,” STMicroelectronics. [Online]. Available: https://www.st.com/en/microcontrollers-microprocessors/stm32-32-bit-arm-cortex-mcus.html.
+
+[29] STMicroelectronics, “X-CUBE-AI: AI expansion pack for STM32CubeMX,” STMicroelectronics. [Online]. Available: https://www.st.com/en/embedded-software/x-cube-ai.html.
+
+[30] R. C. Coulter, “Implementation of the Pure Pursuit Path Tracking Algorithm,” Carnegie Mellon University Robotics Institute, Pittsburgh, PA, USA, Tech. Rep. CMU-RI-TR-92-01, Jan. 1992.
+
+[31] J. Kong, M. Pfeiffer, G. Schildbach, and F. Borrelli, “Kinematic and dynamic vehicle models for autonomous driving control design,” in Proc. IEEE Intelligent Vehicles Symp. (IV), Seoul, South Korea, 2015, pp. 1094-1099.
+
+[32] IEEE, “IEEE Code of Ethics,” IEEE Policies, Sec. 7.8, rev. Jun. 2020. [Online]. Available: https://ieee-cas.org/about/ieee-code-ethics
+
+[33] ISO, ISO 13850:2015, Safety of machinery — Emergency stop function — Principles for design. Summaries: https://machinerysafety101.com/2026/05/18/iso-13850-emergency-stop-requirements/ and https://public-library.safetyculture.io/products/emergency-stop-audit
+
+[34] IEC, IEC 62133-2:2017 + AMD1:2021, Safety requirements for portable sealed secondary cells and batteries — Lithium systems. Example certification reports: https://cdn.sparkfun.com/assets/2/7/5/9/0/LP783450-IEC62133.pdf and https://www.htenergy.com.tw/license/IEC_62133.pdf
+
 
 ## Contributions
 
@@ -733,7 +770,7 @@ A Raspberry Pi 4B with 4GB of RAM would be sufficient for this approach [7]. To 
 
 ###### OpenMV Camera
 
-This proposed solution uses an OpenMV smart camera running MicroPython. It would perform on-board AprilTag decoding and color blob detection for the three tasks. Results go over a UART link to the main controller, which handles motor and actuator control.
+This proposed solution uses a dedicated smart vision module that performs image processing on-board and sends the results to the main controller. OpenMV smart camera running MicroPython. It would perform on-board AprilTag decoding and color blob detection for the three tasks. Results go over a UART link to the main controller, which handles motor and actuator control.
 
 Unlike an SBC + CSI camera, integration for the OpenMV camera is very simple. The camera unit ships with AprilTag and color detection integrated in its firmware and IDE [11][12]. Because the camera runs a script from flash [11], it also avoids the boot time and potential SD card corruption concerns of a Linux-based SBC. While less precedent exists for the OpenMV camera in autonomous competition robots, it has been used for color detection in a similar manner to how it would be used for the SECON Hardware Competition [6]. OpenMV camera is also low power, drawing less than 0.75 Watts with 5V input [11]. While it lacks the wide camera options of using a CSI camera, OpenMV does provide swappable lens’ with their OpenMV N6 [11].
 
@@ -1233,8 +1270,6 @@ Each team member will still be responsible for managing a subsystem and its deta
 [44] STMicroelectronics, "VL53L7CX: Time-of-Flight 8x8 multizone ranging sensor with 90 degrees FoV," STMicroelectronics.  (accessed Oct. 18, 2026).
 
 [45] SLAMTEC, "RPLIDAR C1 specifications," SLAMTEC.  (accessed Oct. 18, 2026).
-
-Hadassah's Citation:
 
 [46] Sierra Circuits, "How to Use Decoupling Capacitors in PCB Design," Sierra Circuits Blog, Oct. 2023. [Online]. Available: . [Accessed: Oct. 21, 2026].
 
