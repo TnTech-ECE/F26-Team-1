@@ -1,5 +1,5 @@
 # Midterm Design Document
-The following document is Fall 2026 Capstome Team 1's Midterm Design Document, comprised of the team's Project Proposal & Conceptual Design.
+The following document is Fall 2026 Capstone Team 1's Midterm Design Document, comprised of the team's Project Proposal & Conceptual Design.
 
 # Project Proposal
 
