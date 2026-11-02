@@ -564,7 +564,8 @@ Even with its processing drawbacks, the team has decided to move forward with th
 
 ### Hardware Block Diagram
 
-<img width="975" height="658" alt="image" src="https://github.com/user-attachments/assets/0a8052d5-814e-492f-ac99-8fb72adbf87f" />
+<img width="1034" height="702" alt="image" src="https://github.com/user-attachments/assets/fe4c2065-adf0-4615-82c0-2ab2c0f5c8aa" />
+
 
 ### Operational Flow Chart
 
@@ -644,6 +645,31 @@ In addition, the Jetson Nano can run SLAM (Simultaneous Localization and Mapping
 
 Despite its strengths, Jetson Nano comes with some drawbacks, particularly in terms of power consumption and cost. Although it is relatively efficient for an AI-capable board, it still draws considerably more power than simpler microcontrollers or basic single-board computers such as the Raspberry Pi. It typically requires a stable 5V supply, and in its higher performance 10W mode it may need a barrel jack power adapter rather than USB power alone [20]. This can be a limitation for battery-powered or portable robotics projects, where the added draw shortens runtime and may call for larger battery packs, which in turn adds weight and bulk. Cost is another concern. The Jetson Nano is more expensive than many competing hobbyist boards, and the price rises further once essential accessories are factored in, such as a quality power supply, a cooling fan or heatsink, a microSD card or other storage, and a Wi-Fi module, since the board does not include wireless connectivity by default. The board itself without modules can vary from 89$ to 199$ with the Jetson Nano Developer Kit going up to 249$.
 
+Raspberry Pi 5 Development Board
+
+<img width="400" height="301" alt="image" src="https://github.com/user-attachments/assets/55c9b5f0-9500-4184-893e-0b4279ecfc14" />
+
+
+The Raspberry Pi 5 is a full single-board computer built around a quad-core
+2.4 GHz Arm Cortex-A76 processor, with dual-band Wi-Fi, Bluetooth 5.0, a
+40-pin GPIO header, and two MIPI ports for cameras or displays [25]. Like the
+Jetson Nano, it runs a general-purpose Linux operating system, which gives it
+access to a very large community and software ecosystem. It could run
+AprilTag detection and color detection in Python or OpenCV on a connected
+camera, making it a candidate for the vision layer of the robot. Compared with
+the Jetson Nano, it lacks a CUDA-capable GPU, so heavier neural-network
+inference would run more slowly, but it offers built-in wireless connectivity
+and a simpler software setup for classical vision tasks.
+
+Its drawbacks are similar to those of the Jetson Nano. It recommends a
+5V/5A USB-C power supply, which is a substantial load for a battery-powered
+robot [26]. Prices have varied considerably by retailer and memory size, and
+accessories such as the power supply, cooling, and microSD card add to the
+cost [25]. Because it runs Linux rather than an RTOS, it is also a poor fit
+for the 5 to 10 ms motor control loop required by this robot, and it has no
+analog inputs for sensors. It therefore works best as a vision layer paired
+with a microcontroller, not as the main controller.
+
 STM32 Board NUCLEO
 
 <img width="398" height="598" alt="image" src="https://github.com/user-attachments/assets/c7b91272-feb1-4360-b65f-30404ff6b52a" />
@@ -662,22 +688,35 @@ Teensy Development Board
 
 Teensy 4.1 Development Board
 
-The Teensy 4.1 is attractive for this robot because of its raw microcontroller performance and low cost. It uses a single-core 600 MHz Cortex-M7 (NXP iMXRT1062) with 8MB of flash, 1MB of RAM, 55 digital I/O pins, and 18 ADC channels, at a price of about $32. The M7 core can execute two instructions per clock cycle, and its floating-point unit accelerates both 32-bit and 64-bit math in hardware, which suits the PID calculations and sensor filtering this robot needs. Compared with the Jetson Nano, the Teensy draws only about 100mA at 600 MHz, which helps battery life, and it costs less than the Nano once accessories are included. Compared with the STM32 Nucleo, the Teensy has a much faster clock, and it can be programmed from the Arduino IDE with the Teensyduino extension, which lowers the learning curve for a student team [22].
+The Teensy 4.1 is attractive for this robot because of its raw microcontroller performance and low cost. It uses a single-core 600 MHz Cortex-M7 (NXP iMXRT1062) with 8MB of flash, 1MB of RAM, 55 digital I/O pins, and 18 ADC channels, at a price of about $32. Like the STM32H743ZI, its Cortex-M7 core is dual-issue and includes a hardware FPU for both 32-bit and 64-bit math, which suits the PID calculations and sensor filtering this robot needs, so the core architecture itself does not separate the two boards. Compared with the Jetson Nano, the Teensy draws only about 100mA at 600 MHz, which helps battery life, and it costs less than the Nano once accessories are included. Compared with the STM32 Nucleo, the Teensy has a higher clock speed (600 MHz versus up to 480 MHz), and it can be programmed from the Arduino IDE with the Teensyduino extension, which lowers the learning curve for a student team [22].
 
 Teensy also has drawbacks. It is a bare board with no built-in ST-LINK-style debugger, so debugging relies mostly on serial prints, whereas the Nucleo includes a debugger and the STM32CubeIDE setup tools. It also has less official RTOS tooling than the STM32, so running FreeRTOS would depend on community ports rather than generated project scaffolding. Next to the Jetson Nano, it has no GPU or camera pipeline, and it has no built-in Wi-Fi or Bluetooth, so AprilTag detection would have to run on a separate camera module or companion computer and send results over UART or I2C. Headers may also need to be purchased and soldered separately, depending on the version. Overall, the Teensy is a strong, low-power, low-cost choice for the real-time control layer, but it works best paired with a vision module rather than replacing one [23],[24].
 
-Raspberry Pi and Pi Pico
+Raspberry Pi Pico 2 Development Board
 
-<img width="405" height="305" alt="image" src="https://github.com/user-attachments/assets/5fed3e79-86d1-4996-8c15-a6ca176b3e2a" />
 <img width="480" height="191" alt="image" src="https://github.com/user-attachments/assets/55b65784-3e62-4707-97dc-ee9a5e1bcf16" />
 
 
-Raspberry Pi 5(left) & Raspberry Pi Pico (right)
+Raspberry Pi Pico
 
-The Raspberry Pi 5 is a full single-board computer: a quad-core 2.4 GHz Arm Cortex-A76 processor with dual-band Wi-Fi, Bluetooth 5.0, a 40-pin GPIO header, and two MIPI ports for cameras or displays [25]. That makes it a middle option between the Jetson Nano and the microcontroller boards. It could run AprilTag detection and color detection in Python or OpenCV on a connected camera, so it could act as the vision companion computer your draft describes without the Jetson's GPU-oriented setup. It also benefits from a very large community and Linux software ecosystem. Its drawbacks are similar to Jetson's, though. It recommends a 5V/5A USB-C power supply, which is a substantial load for a battery-powered robot [26]. Prices have also varied considerably by retailer and memory size, and the accessories (power supply, cooling, microSD card) add to the cost [25]. Because it runs a general-purpose Linux operating system rather than an RTOS, it is also a poor fit for the 5 to 10 ms motor control loop described in your RTOS section, and it has no analog inputs for sensors. So it works best as the vision layer paired with a microcontroller, not as the main controller.
+The Raspberry Pi Pico 2 is a microcontroller board and competes directly with
+the Teensy 4.1 and STM32 Nucleo. It uses the RP2350 chip with dual Cortex-M33
+cores at 150 MHz, 520 KB of SRAM, and 4 MB of flash [27]. At about $5, it is
+by far the cheapest board in this comparison. It offers 26 GPIO pins, 3 ADC
+inputs, 24 PWM channels, and programmable I/O (PIO) blocks that can handle
+custom interfaces such as encoder reading [28]. It can be programmed in
+C/C++, MicroPython, or the Arduino IDE, and drag-and-drop programming over
+USB keeps setup simple for a student team [28].
 
-The Raspberry Pi Pico 2 is a microcontroller board and competes directly with the Teensy and STM32 Nucleo. It uses the RP2350 chip with dual Cortex-M33 cores at 150 MHz, 520KB of SRAM, and 4MB of flash [27]. It is by far the cheapest board in this comparison, at about $5, and it offers 26 GPIO pins, 3 ADC inputs, 24 PWM channels, and programmable I/O blocks that can handle custom interfaces such as encoder reading [28]. It can be programmed in C/C++, MicroPython, or the Arduino IDE, and drag-and-drop programming over USB keeps setup simple for a student team [28]. Its limitations are a lower clock speed than the Teensy 4.1 (600 MHz) or Nucleo-H743ZI2 (480 MHz), less memory, and only three ADC channels, which could be tight if the robot uses many analog distance sensors. It also has no built-in debugger, so debugging needs either serial output or the separate Raspberry Pi Debug Probe [25], and there is no Wi-Fi or camera interface, so vision would again have to run on a separate board. Still, 150 MHz is more than enough for a PID loop and wall following, so the Pico 2 is a strong low-cost option for the real-time control layer, and it could pair with a Raspberry Pi 5 for vision.
-
+Its limitations are a lower clock speed than the Teensy 4.1 (600 MHz) or the
+Nucleo-H743ZI2 (480 MHz), less memory, and only three ADC channels, which
+could be tight if the robot uses many analog distance sensors. It has no
+built-in debugger, so debugging relies on serial output or the separate
+Raspberry Pi Debug Probe [27]. It also has no camera interface, and the
+standard Pico 2 has no Wi-Fi, so vision would have to run on a separate board.
+Still, 150 MHz is more than enough for a PID loop and wall following, so the
+Pico 2 is a strong low-cost option for the real-time control layer and could
+be paired with a Raspberry Pi 5 for vision.
 Price Comparison
 
 | Board | Processor | Clock Speed | Approximate Price | Camera Compatible |
@@ -687,6 +726,61 @@ Price Comparison
 | Teensy 4.1 | Single-core ARM Cortex-M7 (NXP iMXRT1062) | 600MHz | $32 | Camera over UART or I2C. |
 | Raspberry Pi 5 | Quad-core ARM Cortex-A76 (Broadcom BCM2712) + VideoCore VII GPU | 2.4GHz | $110 | USB Camera, CSI Camera |
 | Raspberry Pi Pico 2 | Dual-core ARM Cortex-M33 (RP2350) | 150MHz | $18 | Camera over UART or I2C. |
+
+## Weighted Trade Study
+
+The boards were evaluated against criteria derived from the robot's
+specifications. Each criterion is tied to a requirement, and weights reflect
+its importance to mission success. Scores use a 1 to 5 scale
+(1 = poor, 3 = acceptable, 5 = excellent).
+
+### Criteria and Weights
+
+| # | Criterion | Tied Specification | Weight |
+| --- | --- | --- | --- |
+| 1 | Real-time control | REQ-1: 5 to 10 ms motor control loop with deterministic timing | 20% |
+| 2 | Vision capability | REQ-2: AprilTag and color detection from a camera | 15% |
+| 3 | Power consumption | REQ-3: battery-powered operation from a 5 V supply | 15% |
+| 4 | Cost | REQ-4: project budget, including required accessories | 15% |
+| 5 | I/O and interfaces | REQ-5: analog distance sensors, PWM for 4 motors, encoders, UART/I2C | 15% |
+| 6 | Ease of development | REQ-6: student team with limited embedded experience | 10% |
+| 7 | Debug and RTOS tooling | REQ-7: RTOS support and ability to debug | 10% |
+| | **Total** | | **100%** |
+
+### Weighted Decision Matrix
+
+| Criterion (Weight) | Jetson Nano | Raspberry Pi 5 | STM32 Nucleo-H743ZI2 | Teensy 4.1 | Raspberry Pi Pico 2 |
+| --- | :-: | :-: | :-: | :-: | :-: |
+| Real-time control (20%) | 2 | 2 | 5 | 5 | 4 |
+| Vision capability (15%) | 5 | 4 | 1 | 1 | 1 |
+| Power consumption (15%) | 1 | 1 | 3 | 4 | 5 |
+| Cost (15%) | 2 | 2 | 4 | 4 | 5 |
+| I/O and interfaces (15%) | 2 | 2 | 5 | 5 | 3 |
+| Ease of development (10%) | 3 | 4 | 2 | 5 | 5 |
+| Debug and RTOS tooling (10%) | 3 | 3 | 5 | 2 | 3 |
+| **Weighted total (out of 5)** | **2.50** | **2.45** | **3.65** | **3.80** | **3.70** |
+
+### Scoring Rationale
+
+| Criterion | Basis for Scores |
+| --- | --- |
+| Real-time control | The Jetson Nano and Raspberry Pi 5 run Linux, so timing has jitter. The STM32 and Teensy are bare-metal or RTOS capable. The Pico 2 is slower at 150 MHz but sufficient for a PID loop. |
+| Vision capability | The Jetson Nano has a GPU, VPI, and CSI support. The Raspberry Pi 5 has CSI and OpenCV but no CUDA acceleration. The microcontrollers need an external camera module. |
+| Power consumption | The Jetson Nano (5 to 10 W) and Raspberry Pi 5 (5 V/5 A supply recommended) draw the most. The STM32 board draws about 0.5 to 0.8 W. The Teensy draws about 100 mA at 600 MHz. The Pico 2 draws the least. |
+| Cost | Based on the price table plus accessories noted in the text (power supply, cooling, storage). |
+| I/O and interfaces | The Jetson Nano and Raspberry Pi 5 have no analog inputs. The Teensy has 18 ADC channels and 55 I/O pins. The Pico 2 has only 3 ADC channels. |
+| Ease of development | The STM32 requires low-level configuration (clock tree, NVIC, timers). The Teensy and Pico 2 use Arduino or MicroPython. |
+| Debug and RTOS tooling | The STM32 has ST-LINK and generated FreeRTOS scaffolding. The Teensy relies on serial prints and community RTOS ports. The Pico 2 needs a separate Debug Probe. |
+
+
+### Conclusion
+
+The Jetson Nano and Raspberry Pi 5 score lowest because they are not suited to
+the real-time control layer, but they remain the strongest options for vision.
+Among the microcontrollers, the Teensy 4.1, Pico 2, and STM32 are close. The
+STM32 Nucleo is selected as the master controller because of its ST-LINK
+debugging, generated FreeRTOS support, and I/O capability, which become the
+deciding factors when debugging and RTOS tooling are weighted more heavily.
 
 Proposed Solution:
 
