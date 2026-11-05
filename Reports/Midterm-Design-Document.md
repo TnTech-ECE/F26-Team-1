@@ -1432,5 +1432,5 @@ Each team member will still be responsible for managing a subsystem and its deta
 | Flag Raising & Tire-Changing Actuators Atomic Subsystem | Matthew |
 | Obstacle & Boundary Detection Atomic Subsystem | Austin |
 | Power & Battery Management Atomic Subsystem | Hadassah |
-| Ethical, Professional, and Standards Considerations | Hadassah |
+| Ethical, Professional, and Standards Considerations | Hadassah & Austin |
 | Resources | Kyle |
