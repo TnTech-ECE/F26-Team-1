@@ -618,7 +618,7 @@ For the finalized design, we will be incorporating 1.25mm JST connectors for all
 
 ### Master Control
 
-The master control system can be broken down into three major components, or two depending on how the camera subsystem is committed. The two main core jobs will be collecting all the data from sensors for different tasks as well as sending out signals to actuators for different tasks. Additionally, based on how the camera subsystem is designed, the master controller also must do the computational of the Image Processing and AprilTags Detection. The robot shall also use a combination of sensors that will allow the robot to perceive its location on the game board and be able to identify objects on the board. The robot should utilize a camera that can perceive both color and April Tags detection to score points.
+The master control system can be broken down into three major components, or two depending on how the camera subsystem is implemented. The two main core jobs will be collecting all the data from sensors for different tasks as well as sending out signals to actuators for different tasks. Additionally, based on how the camera subsystem is designed, the master controller also must do the computational of the Image Processing and AprilTags Detection. The robot shall also use a combination of sensors that will allow the robot to perceive its location on the game board and be able to identify objects on the board. The robot should utilize a camera that can perceive both color and April Tags detection to score points.
 
 Despite its name, ROS (Robot Operating System) isn't an operating system. It's a middleware framework that runs on top of Linux, providing drivers, communication tools, and shared infrastructure that make robotics software reusable across platforms. Before ROS, every robot had its own sensors, motors, and protocols, so developers had to rewrite code for each new machine, and a navigation algorithm built for one robot rarely worked on another [13].
 
@@ -648,7 +648,7 @@ STM32 Board NUCLEO
 
 <img width="398" height="598" alt="image" src="https://github.com/user-attachments/assets/c7b91272-feb1-4360-b65f-30404ff6b52a" />
 
-STM32 Nucleo-H743ZI2 Development Board
+STM32 Nucleo-H753ZI2 Development Board
 
 STM32 Nucleo boards are a good fit for RTOS projects: they're affordable, include an ST-LINK debugger/programmer, and offer expansion headers, which makes prototyping and debugging convenient. STM32CubeIDE also makes it easier to configure pins and create RTOS tasks, since it can generate the FreeRTOS (CMSIS-RTOS) scaffolding automatically [21].
 
@@ -676,25 +676,27 @@ Raspberry Pi 5(left) & Raspberry Pi Pico (right)
 
 The Raspberry Pi 5 is a full single-board computer: a quad-core 2.4 GHz Arm Cortex-A76 processor with dual-band Wi-Fi, Bluetooth 5.0, a 40-pin GPIO header, and two MIPI ports for cameras or displays [25]. That makes it a middle option between the Jetson Nano and the microcontroller boards. It could run AprilTag detection and color detection in Python or OpenCV on a connected camera, so it could act as the vision companion computer your draft describes without the Jetson's GPU-oriented setup. It also benefits from a very large community and Linux software ecosystem. Its drawbacks are similar to Jetson's, though. It recommends a 5V/5A USB-C power supply, which is a substantial load for a battery-powered robot [26]. Prices have also varied considerably by retailer and memory size, and the accessories (power supply, cooling, microSD card) add to the cost [25]. Because it runs a general-purpose Linux operating system rather than an RTOS, it is also a poor fit for the 5 to 10 ms motor control loop described in your RTOS section, and it has no analog inputs for sensors. So it works best as the vision layer paired with a microcontroller, not as the main controller.
 
-The Raspberry Pi Pico 2 is a microcontroller board and competes directly with the Teensy and STM32 Nucleo. It uses the RP2350 chip with dual Cortex-M33 cores at 150 MHz, 520KB of SRAM, and 4MB of flash [27]. It is by far the cheapest board in this comparison, at about $5, and it offers 26 GPIO pins, 3 ADC inputs, 24 PWM channels, and programmable I/O blocks that can handle custom interfaces such as encoder reading [28]. It can be programmed in C/C++, MicroPython, or the Arduino IDE, and drag-and-drop programming over USB keeps setup simple for a student team [28]. Its limitations are a lower clock speed than the Teensy 4.1 (600 MHz) or Nucleo-H743ZI2 (480 MHz), less memory, and only three ADC channels, which could be tight if the robot uses many analog distance sensors. It also has no built-in debugger, so debugging needs either serial output or the separate Raspberry Pi Debug Probe [25], and there is no Wi-Fi or camera interface, so vision would again have to run on a separate board. Still, 150 MHz is more than enough for a PID loop and wall following, so the Pico 2 is a strong low-cost option for the real-time control layer, and it could pair with a Raspberry Pi 5 for vision.
+The Raspberry Pi Pico 2 is a microcontroller board and competes directly with the Teensy and STM32 Nucleo. It uses the RP2350 chip with dual Cortex-M33 cores at 150 MHz, 520KB of SRAM, and 4MB of flash [27]. It is by far the cheapest board in this comparison, at about $5, and it offers 26 GPIO pins, 3 ADC inputs, 24 PWM channels, and programmable I/O blocks that can handle custom interfaces such as encoder reading [28]. It can be programmed in C/C++, MicroPython, or the Arduino IDE, and drag-and-drop programming over USB keeps setup simple for a student team [28]. Its limitations are a lower clock speed than the Teensy 4.1 (600 MHz) or Nucleo-H753ZI2 (480 MHz), less memory, and only three ADC channels, which could be tight if the robot uses many analog distance sensors. It also has no built-in debugger, so debugging needs either serial output or the separate Raspberry Pi Debug Probe [25], and there is no Wi-Fi or camera interface, so vision would again have to run on a separate board. Still, 150 MHz is more than enough for a PID loop and wall following, so the Pico 2 is a strong low-cost option for the real-time control layer, and it could pair with a Raspberry Pi 5 for vision.
 
-Price Comparison
+#### Price Comparison
 
 | Board | Processor | Clock Speed | Approximate Price | Camera Compatible |
 | --- | --- | --- | --- | --- |
 | NVIDIA Jetson Nano (4GB Dev Kit) | Quad-core ARM Cortex-A57 + 128-core Maxwell GPU | 1.43GHz | $99 Minimum | USB Camera, CSI Camera |
-| STM32 Nucleo-H743ZI2 | Single-core ARM Cortex-M7 (STM32H743ZI) | 480MHz | $40 | Camera over UART or I2C. |
+| STM32 Nucleo-H753ZI2 | Single-core ARM Cortex-M7 (STM32H753ZI) | 480MHz | $40 | Camera over UART or I2C. |
 | Teensy 4.1 | Single-core ARM Cortex-M7 (NXP iMXRT1062) | 600MHz | $32 | Camera over UART or I2C. |
 | Raspberry Pi 5 | Quad-core ARM Cortex-A76 (Broadcom BCM2712) + VideoCore VII GPU | 2.4GHz | $110 | USB Camera, CSI Camera |
 | Raspberry Pi Pico 2 | Dual-core ARM Cortex-M33 (RP2350) | 150MHz | $18 | Camera over UART or I2C. |
 
-Proposed Solution:
-
-ROS 2 vs RTOS for this project
+#### ROS 2 vs RTOS for this project
 
 ROS 2 is designed for systems where perception, localization, and planning must be coordinated across many software components, typically in large or unstructured environments. The field is a single 4' x 8' sheet of plywood with a fixed layout, a 3-minute match limit, and a task that reduces to a short state machine: start, complete laps, make a pit stop, complete the remaining laps, and finish [2]. The environment is small and known in advance, with only three to four randomly placed obstacles and one randomly selected AprilTag, so the robot does not need a map, global localization, or long-horizon path planning. Capabilities such as SLAM, a navigation stack, and a transform tree address problems this competition does not present.
 
 Several time-constrained tasks benefit from RTOS. A motor control loop, such as a velocity PID controller, must run at a fixed period of roughly 5 to 10 ms, since mistiming can cause drift or oscillation, and a high-priority task using vTaskDelayUntil() keeps that period deterministic. Distance sensors can take tens of milliseconds per reading, so instead of blocking everything as in a single-loop design, the sensor task can wait on a DMA transfer or semaphore while the control loop keeps running. Obstacle response also depends on low sensing and planner latency, since each lap with contact forfeits 15 points. Finally, the pit stop must last at least 2 seconds to earn the full 15 points (otherwise 10), so a fixed-delay task targeting about 2.3 seconds is a simple, verifiable way to add margin. Given this, a microcontroller board can run RTOS or basic loops with interrupts are adequate for this project.
+
+#### Proposed Solution
+
+The proposed solution is to use the NUCLEO-H753ZI development board. It provides the hardware timers, encoder interfaces, PWM channels, ADCs with DMA, and communication peripherals needed to interface all sensors and actuators on one board. Many team members are familar with the STM32 archtecture, and its on-board ST-LINK debugger addresses the debugging limitation noted for the Teensy 4.1 and Pico 2. The proposed firmware will use an interrupt-driven design with a polled state machine instead of an RTOS. If the number of concurrent tasks grows beyond what a single interrupt-based loop can handle, migrating to FreeRTOS via STM32CubeIDE remains possible on the same hardware. A microcontroller-based master controller was selected over the Jetson Nano and Raspberry Pi 5. As previously mentioned in the Comparative Analysis of Potential Solutions section, a single-board computer running Linux is not necessary for the requirements of this competition. A microcontroller is much more suited to deterministic control and sensor I/O. While the Teensy 4.1 has a faster clock for a lower price, it has no on-board debugger and is limited in number of pins. The Raspberry Pi Pico 2 is the cheapest option but has a 150 MHz clock, less memory, and fewer ADC channels. The Nucleo provides more computing margin, more analog inputs, and more memory for the sensor suite.
 
 ### Motor Control – Ty
 
