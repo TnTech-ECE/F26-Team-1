@@ -1217,14 +1217,63 @@ Document and test the implemented fault-detection functions
 
 <img width="692" height="839" alt="image" src="https://github.com/user-attachments/assets/10db6b5e-b4a0-4d05-8925-9236da2cae76" />
 
-
 ## Ethical, Professional, and Standards Considerations
 
-The conceptual design connects autonomous navigation, energy efficiency, and responsible engineering. From the robot’s path planning to the AprilTag-based localization, the design captures the capability that is relevant to autonomous vehicles and search-and-rescue systems. This illustrates how the competition can support technologies that operate with limited human interaction and reduce the possibility of exposure to hazardous environments.
+The conceptual design connects autonomous navigation, energy efficiency, and responsible engineering.
 
-The design emphasizes efficient power management to complete tasks without recharging while remaining within the 30-volt power limit. Using available and reusable components helps control development costs, maintenance, and supports future projects. These all encourage an economical and sustainable design approach.
+### Ethics and Sustainability
 
-What guides the robot’s development and team practices is safety, reliability, and integrity. To be able to reduce risks, safety materials, an accessible emergency stop, testing, and inspection are required. To have accountability and effective collaboration throughout the project, fair competition, proper acknowledgement of sources, and honest documentation are recommended.
+The design emphasizes efficient power management to complete tasks without recharging while remaining within the 30-volt power limit. Using available and reusable components helps control development costs, maintenance, and supports future projects. These choices are carried out through the reuse, battery-life, and disposal measures in Table 2 (M3-M7).
+
+What guides the robot's development and team practices is safety, reliability, and integrity. To be able to reduce risks, safety materials, an accessible emergency stop, testing, and inspection are required. To have accountability and effective collaboration throughout the project, fair competition, proper acknowledgement of sources, and honest documentation are commitments the team makes.
+
+### Stakeholder Impact: Benefits, Disadvantages, and Mitigation
+
+The robot's path planning and AprilTag-based localization illustrate techniques used in autonomous vehicles and search-and-rescue systems, but the project itself is a single competition robot. The effects of this project are small and mostly local. To identify who is affected, the team considered every aspect of the robot's lifecycle from construction through to testing, competition, and disposal. Tables 1a and 1b summarize the groups who benefit and who are disadvantaged across economic, environmental, and societal contexts.
+
+**Table 1a: Who benefits from this project**
+
+| Context | Beneficiary | How they benefit |
+| --- | --- | --- |
+| Economic | TTU students on the team | Students build hands-on integration experience and portfolio work that applies directly to ECE and ME careers. |
+| Economic | ECE and ME departments | The project produces evidence for both departments' ABET student outcomes. A competitive entry also showcases both departments to prospective students. |
+| Economic | Future capstone teams | Reused parts and a published BOM reduce the cost of future builds. |
+| Environmental | Future capstone teams | Reusing this project's parts lets future teams build without purchasing new hardware, avoiding the extraction and disposal impacts described in D3 and D4. |
+| Societal | Future SECON teams | Published documentation, schematics, and code give teams at any school, including lower-resource ones (D1), a documented starting point. |
+| Societal | Competition audience | A working autonomous robot demonstrates engineering to conference attendees and banquet guests, which can encourage interest in ECE. |
+| Societal | Team members who own core subsystems | Owning a subsystem from research through testing builds in-depth, demonstrable experience in that area. |
+| Societal | Employers in autonomous systems | Team members gain practice with localization, sensing, and real-time control used in the autonomous-systems industry. |
+
+**Table 1b: Who is disadvantaged by this project**
+
+| ID | Context | Disadvantaged | How they are disadvantaged |
+| --- | --- | --- | --- |
+| D1 | Economic | Teams from lower-resource schools | Spending ~$900 on a build raises the bar for schools that can't match that budget. Better-funded teams can afford better sensors and compute, and that can turn into competition results. |
+| D2 | Economic | Other capstone teams that draw on the same departmental funds | Funding spent here isn't available to other teams. |
+| D3 | Environmental | Sanitation workers and communities near landfills | LiPo batteries and failed PCBs become waste when thrown out. LiPo batteries can start fires in garbage trucks and landfills. Both contribute to e-waste and require specialized disposal. |
+| D4 | Environmental | Communities near battery and electronics manufacturing and sourcing | The LiPo pack uses lithium and cobalt, and the motors use rare earths. Lithium extraction uses local water supplies in dry regions, and cobalt mining is associated with poor labor conditions. This project's share of that demand is small. |
+| D5 | Societal | People in camera view | Attendees will be within view of the robot's camera with no choice to opt out. This only becomes an issue if camera data is stored or transmitted. |
+| D6 | Societal | Team members with less embedded experience | Work on subsystems is divided based on members' existing experience, limiting the number of learning opportunities. |
+| D7 | Societal | Workers in jobs autonomy displaces | Autonomous navigation contributes to automation that reduces demand for drivers and delivery workers. This project's contribution is indirect and small. |
+
+Of these groups, teams from lower-resource schools (D1) carry the most significant cost, because it is structural and falls entirely outside the project. The environmental effects (D3, D4) can't be ignored but are considered small at this scale. D3 and D4 also share a cause with D2: buying and throwing away hardware. For that reason, reusing parts addresses all three. The camera concern (D5) depends on a design choice and is removed by M8. Two disadvantages are the counterpart of a benefit in Table 1a: the experience gained by subsystem owners comes partly at the expense of other members (D6), and the skills valued by autonomous-systems employers come from the same automation that reduces demand for other workers (D7).
+
+**Table 2: Mitigation for each disadvantaged group**
+
+| ID | Addresses | Mitigation | Type | Owner | Timing | Evidence |
+| --- | --- | --- | --- | --- | --- | --- |
+| M1 | D1 | Publish the BOM, schematics, PCB files, and code in a public repository after the competition. | Built-in | Team | After competition | Public repository link |
+| M2 | D1 | Recommend that the competition consider a robot cost cap or cost reporting requirement. | Recommended to sponsor (IEEE SoutheastCon) | Team | Post-competition feedback | Submitted feedback |
+| M3 | D2, D3, D4 | Set a budget ceiling, reuse parts from the previous TTU SECON robot and department inventory, and include cost as a criterion in every decision matrix. | Built-in | BOM lead | Before procurement | BOM column marking reused parts |
+| M4 | D2, D3, D4 | Return working parts to department inventory for future teams. | Built-in | Team | After competition | Inventory handoff list |
+| M5 | D3 | Follow a LiPo charging and storage protocol (storage voltage, fire-safe bag, no unattended charging) to extend pack life, and dispose of packs through TTU Environmental Health & Safety or a battery recycling drop-off. | Built-in | Power subsystem lead | Before first powered test | Written protocol; disposal record |
+| M6 | D3, D4 | Validate circuits on development boards before ordering the PCB to limit board revisions. | Built-in | PCB lead | Before PCB order | Test log dated before fabrication |
+| M7 | D4 | Size the battery from the power budget and purchase one pack rather than oversizing or buying spares. | Built-in | Power subsystem lead | Procurement | Power budget table |
+| M8 | D5 | Process camera frames in memory only; no images are stored or transmitted. | Built-in | Vision subsystem lead | Firmware design | Firmware review |
+| M9 | D6 | Pair each subsystem owner with a second team member and rotate integration and testing roles. | Built-in | Team | Throughout Capstone II | Task assignments in timeline |
+| M10 | D7 | Limit autonomy-related claims in the documentation to what the project actually demonstrates. | Built-in | Team | This revision | Revised Broader Implications section |
+
+Each built-in mitigation produces evidence that can be checked: the public repository, the written LiPo protocol and disposal record, the pre-fabrication test log, and the revised documentation. M2 is the only action outside the team's control; it will be submitted to IEEE SoutheastCon as a recommendation. Owner roles correspond to the subsystem assignments in the Division of Labor.
 
 ## Resources
 
