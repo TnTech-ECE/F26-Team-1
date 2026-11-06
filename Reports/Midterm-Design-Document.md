@@ -1076,7 +1076,6 @@ Sensor Option Comparison
 
 <img width="958" height="685" alt="image" src="https://github.com/user-attachments/assets/b315661e-b0f3-4d35-92f9-3a0a851dbe9b" />
 
-
 ### Power & Battery Management
 
 ###### Purpose and Functions Overview:
@@ -1246,7 +1245,7 @@ Subsystem Shall:
 
 * Document and test the implemented fault-detection functions
 
-<img width="700" alt="Power Subsystem Block Diagram" src="assets/power-subsystem-diagram.png" />
+<img width="712" height="862" alt="power_subsystem drawio" src="https://github.com/user-attachments/assets/de43eaf8-efa9-413e-bcb0-6192042fa4ed" />
 
 ## Ethical, Professional, and Standards Considerations
 
