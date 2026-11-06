@@ -87,7 +87,7 @@ The robot specifications define the physical, electrical, and interface requirem
 | RS-3  | The robot shall not exceed 11kg in its heaviest configuration, providing 1kg of margin below the 12 kg limit \[3, R02\].                                                                 | Calibrated scale.                                               |
 | RS-4  | The start input shall be a single momentary pushbutton labeled "START" in characters no less than 0.5in in height, with an indicator LED illuminating within 1s of actuation \[3, R03\]. | Visual inspection; timed actuation test.                        |
 | RS-5  | The robot shall remain physically static for no less than 5.5s following the start command \[3, R03\].                                                                                   | Frame-by-frame video timing.                                    |
-| RS-6  | The emergency stop shall be a red latching switch labeled "STOP," accessible from the top of the robot, and shall remove power from all actuators within 500ms of actuation \[3, R04\].  | Oscilloscope measurement of actuator supply voltage.            |
+| RS-6 | The emergency stop shall be a red latching switch labeled "STOP," accessible from the top of the robot, and shall remove power from all actuators within 500 ms of actuation. In accordance with ISO 13850:2015, Sec. 4.1.1.2, resetting the emergency stop shall not automatically restart the drivetrain or any actuator; a separate intentional start or arming command shall be required. | Oscilloscope measurement of actuator supply voltage during E-stop activation; repeat the test after resetting the E-stop and verify that no actuator restarts until a separate start command is issued. |
 | RS-7  | Team identification shall be displayed on no fewer than two faces of the robot in characters or graphics no less than 1.5in in height \[3, R10\].                                        | Readability assessment from 6 ft by a non-team member.          |
 | RS-8  | All sensing, processing, and decision-making shall be performed by computing hardware mounted on the robot \[3, R18\].                                                                   | Design review; test run with all external devices powered down. |
 | RS-9  | The robot shall incorporate a designated handle and shall be removable from the Field by a single person, without tools, in less than 30 s \[3, R09\].                                   | Timed removal test.                                             |
@@ -162,9 +162,12 @@ Robot constraints are defined as bound by the physical and electrical design of 
 
 The IEEE Code of Ethics [32] governs how the team works. Article I.1 requires members to hold paramount the safety, health, and welfare of the public and to disclose promptly any factor that might endanger others. Article I.5 requires honest criticism of technical work, acknowledgment and correction of errors, realistic claims based on available data, and proper credit to contributors.
 
-ISO 13850 [33] defines the principles for the emergency stop referenced in Game Manual 1. The standard requires a red actuator on a yellow background, a direct-opening action with mechanical latching, and an emergency stop that remains available at all times and overrides every other function. It also requires that resetting the device does not restart the machine.
+ISO 13850 [33] defines the principles for the emergency stop referenced in Game Manual 1. The standard requires a red actuator on a yellow background, a direct-opening action with mechanical latching, and an emergency stop that remains available at all times and overrides every other function. It also requires that resetting the device does not restart the machine. ISO 13850:2015 [33] is applied directly to the robot's emergency-stop design. Section 4.1.1.2 requires the emergency-stop function to override normal robot operation, remain active until intentionally reset, and prevent the reset itself from restarting the machine. To satisfy these requirements, the robot will use a latching hardware emergency-stop switch that disables actuator operation independently of the normal autonomous control sequence. After the switch is reset, the master controller will remain in a non-operating state until a separate start or arming command is provided. Section 4.3.2 requires emergency-stop devices to be positioned where they are directly accessible to persons who may need to actuate them; therefore, the switch will be mounted on the upper portion of the robot where a Technician or Referee can reach it without removing covers or reaching through moving mechanisms. Section 4.3.6 specifies a red emergency-stop actuator and, where practical, a yellow background, which will also be incorporated into the physical design. Compliance with these requirements will be verified experimentally on the completed robot. While the drivetrain and at least one auxiliary actuator are operating, the emergency stop will be activated while actuator supply voltage is monitored. The measured shutdown time shall remain below the requirement defined in RS-6. After the emergency stop is reset, the robot shall remain stationary and all actuator commands shall remain disabled until a separate start command is issued. The physical location, color, labeling, and accessibility of the emergency-stop device will also be verified by inspection.
 
-IEC 62133-2 [34] covers the safety of portable lithium cells and batteries and underlies the battery-handling rule C08 and constraint IC-9. Published certification reports show typical declared values of 4.20 V maximum charge voltage per cell, a 3.0 V final discharge voltage per cell, and a charging temperature window of roughly 0–45 °C, though each manufacturer declares its own. For a three-cell pack, these correspond to a 12.6 V charge limit and a 9.0 V discharge floor. The standard also requires that voltage, current, and temperature be managed, which the fuse or battery management system in IC-9 satisfies.
+IEC 62133-2:2017 + AMD1:2021 [34] is applied to the design and operation of the robot's lithium battery system. Section 5.4 requires lithium batteries to remain within the temperature, voltage, and current limits specified by the cell or battery manufacturer. Therefore, the allowable operating and charging limits for the selected 3S LiPo battery will be taken from the battery manufacturer's specifications rather than assumed from generic lithium-polymer values. Section 5.5 requires battery terminals to be capable of carrying the maximum anticipated current while minimizing the possibility of a short circuit. This requirement influences the selection of the battery connector, conductor size, insulation, and strain relief. Section 5.6.1 also identifies current, voltage, temperature, and other safety parameters that may require protection at the battery or end-device level. These requirements support the use of overcurrent protection, battery-voltage monitoring, properly rated conductors, and controlled shutdown of high-current loads in the robot. Compliance with the applicable battery requirements will be evaluated using both documentation review and electrical testing. Before integration, the team's battery documentation will record the manufacturer's specified charging voltage, charging current, discharge limits, and temperature limits. Charger settings will be compared with these limits before use. During representative robot operation, battery voltage and current will be measured while the drivetrain and actuators operate simultaneously. Connector and conductor ratings will then be compared against the maximum measured load. The team will not claim that the completed robot itself is certified to IEC 62133-2; where certification is applicable to the selected battery, compliance will be verified using manufacturer or accredited laboratory documentation rather than destructive certification testing by the team.
+
+ISO 12100:2010, Safety of Machinery — General Principles for Design — Risk Assessment and Risk Reduction, will be used to structure the team's design-safety analysis. Section 5 defines a risk-assessment process consisting of determining the limits of the machine, identifying hazards, estimating the associated risk, and evaluating whether additional risk reduction is required. In particular, Sec. 5.4 addresses hazard identification, Sec. 5.5 addresses risk estimation, and Sec. 5.6 addresses risk evaluation. The team will apply this process to hazards including unexpected drivetrain motion, unexpected actuator movement, mechanical pinch points, battery and wiring faults, exposed conductors, and mechanical interference between subsystems.
+Risk reduction will follow the iterative process described in Sec. 6 of ISO 12100. Where practical, hazards will first be reduced through inherently safer design. Remaining hazards will then be addressed using safeguards or protective measures, followed by operating information or procedures for residual risks. For example, the flag servo and tire scoop will use mechanically limited travel to reduce the possibility of interference before relying on software limits. Electrical hazards will be reduced through insulated conductors, appropriately rated connectors, overcurrent protection, and the hardware emergency stop. The risk assessment will be updated when testing identifies new hazards or when major design changes are made.
 
 
 ##### Conduct and Event Safety
@@ -564,7 +567,8 @@ Even with its processing drawbacks, the team has decided to move forward with th
 
 ### Hardware Block Diagram
 
-<img width="975" height="658" alt="image" src="https://github.com/user-attachments/assets/0a8052d5-814e-492f-ac99-8fb72adbf87f" />
+<img width="1034" height="702" alt="image" src="https://github.com/user-attachments/assets/fe4c2065-adf0-4615-82c0-2ab2c0f5c8aa" />
+
 
 ### Operational Flow Chart
 
@@ -628,6 +632,10 @@ A real-time operating system (RTOS) is a specialized operating system built to h
 
 On a single-core microcontroller, true parallel execution isn't possible. Instead, the RTOS scheduler allocates short time slots to different tasks, and because the processor is fast (for example, 72MHz), the switching happens so quickly that the tasks appear to run in parallel. Tasks are assigned priorities based on how critical they are and how tight their timing requirements are, so the scheduler can make sure high-priority tasks meet their deadlines[15].
 
+Software interrupts are a useful way to handle robot control code without making it overly complex. They simulate hardware interrupts by triggering a response whenever a specific condition is met. For example, a robot might start its boot sequence when a button is pressed, or halt a critical action when a sensor reading goes out of range.
+
+The key difference between interrupt-driven and polling-based code is how events are detected. With polling, the processor continuously checks a peripheral’s status in a loop. With interrupts, the peripheral notifies the processor only when an event occurs, which frees the processor to do other work in the meantime.
+
 Comparison of solutions:
 
 Jetson Nano
@@ -644,13 +652,38 @@ In addition, the Jetson Nano can run SLAM (Simultaneous Localization and Mapping
 
 Despite its strengths, Jetson Nano comes with some drawbacks, particularly in terms of power consumption and cost. Although it is relatively efficient for an AI-capable board, it still draws considerably more power than simpler microcontrollers or basic single-board computers such as the Raspberry Pi. It typically requires a stable 5V supply, and in its higher performance 10W mode it may need a barrel jack power adapter rather than USB power alone [20]. This can be a limitation for battery-powered or portable robotics projects, where the added draw shortens runtime and may call for larger battery packs, which in turn adds weight and bulk. Cost is another concern. The Jetson Nano is more expensive than many competing hobbyist boards, and the price rises further once essential accessories are factored in, such as a quality power supply, a cooling fan or heatsink, a microSD card or other storage, and a Wi-Fi module, since the board does not include wireless connectivity by default. The board itself without modules can vary from 89$ to 199$ with the Jetson Nano Developer Kit going up to 249$.
 
+Raspberry Pi 5 Development Board
+
+<img width="400" height="301" alt="image" src="https://github.com/user-attachments/assets/55c9b5f0-9500-4184-893e-0b4279ecfc14" />
+
+
+The Raspberry Pi 5 is a full single-board computer built around a quad-core
+2.4 GHz Arm Cortex-A76 processor, with dual-band Wi-Fi, Bluetooth 5.0, a
+40-pin GPIO header, and two MIPI ports for cameras or displays [25]. Like the
+Jetson Nano, it runs a general-purpose Linux operating system, which gives it
+access to a very large community and software ecosystem. It could run
+AprilTag detection and color detection in Python or OpenCV on a connected
+camera, making it a candidate for the vision layer of the robot. Compared with
+the Jetson Nano, it lacks a CUDA-capable GPU, so heavier neural-network
+inference would run more slowly, but it offers built-in wireless connectivity
+and a simpler software setup for classical vision tasks.
+
+Its drawbacks are similar to those of the Jetson Nano. It recommends a
+5V/5A USB-C power supply, which is a substantial load for a battery-powered
+robot [26]. Prices have varied considerably by retailer and memory size, and
+accessories such as the power supply, cooling, and microSD card add to the
+cost [25]. Because it runs Linux rather than an RTOS, it is also a poor fit
+for the 5 to 10 ms motor control loop required by this robot, and it has no
+analog inputs for sensors. It therefore works best as a vision layer paired
+with a microcontroller, not as the main controller.
+
 STM32 Board NUCLEO
 
 <img width="398" height="598" alt="image" src="https://github.com/user-attachments/assets/c7b91272-feb1-4360-b65f-30404ff6b52a" />
 
 STM32 Nucleo-H743ZI2 Development Board
 
-STM32 Nucleo boards are a good fit for RTOS projects: they're affordable, include an ST-LINK debugger/programmer, and offer expansion headers, which makes prototyping and debugging convenient. STM32CubeIDE also makes it easier to configure pins and create RTOS tasks, since it can generate the FreeRTOS (CMSIS-RTOS) scaffolding automatically [21].
+STM32 Nucleo boards are a good fit for RTOS/ Interrupt-based projects: they're affordable, include an ST-LINK debugger/programmer, and offer expansion headers, which makes prototyping and debugging convenient. STM32CubeIDE also makes it easier to configure pins and create RTOS tasks, NVIC Interrupt since it can generate the FreeRTOS (CMSIS-RTOS) scaffolding automatically [21] and generate code for Interrupt task.
 
 This development board exhibits varying power consumption depending on whether the entire board or only the microcontroller (MCU) core is measured. When the entire board is powered via USB or an external supply, typical current consumption ranges from 150 mA to over 250 mA (approximately 0.5 W to 0.8 W at 5V) due to auxiliary components like the integrated ST-LINK debugger, status LEDs, and the onboard Ethernet transceiver. For the isolated STM32H743ZI MCU core, power efficiency scales at roughly 275 µA/MHz under typical running conditions; when operating at its peak clock speed of 400 MHz to 480 MHz, the core itself draws between 110 mA and 130 mA [29].
 
@@ -662,22 +695,35 @@ Teensy Development Board
 
 Teensy 4.1 Development Board
 
-The Teensy 4.1 is attractive for this robot because of its raw microcontroller performance and low cost. It uses a single-core 600 MHz Cortex-M7 (NXP iMXRT1062) with 8MB of flash, 1MB of RAM, 55 digital I/O pins, and 18 ADC channels, at a price of about $32. The M7 core can execute two instructions per clock cycle, and its floating-point unit accelerates both 32-bit and 64-bit math in hardware, which suits the PID calculations and sensor filtering this robot needs. Compared with the Jetson Nano, the Teensy draws only about 100mA at 600 MHz, which helps battery life, and it costs less than the Nano once accessories are included. Compared with the STM32 Nucleo, the Teensy has a much faster clock, and it can be programmed from the Arduino IDE with the Teensyduino extension, which lowers the learning curve for a student team [22].
+The Teensy 4.1 is attractive for this robot because of its raw microcontroller performance and low cost. It uses a single-core 600 MHz Cortex-M7 (NXP iMXRT1062) with 8MB of flash, 1MB of RAM, 55 digital I/O pins, and 18 ADC channels, at a price of about $32. Like the STM32H743ZI, its Cortex-M7 core is dual-issue and includes a hardware FPU for both 32-bit and 64-bit math, which suits the PID calculations and sensor filtering this robot needs, so the core architecture itself does not separate the two boards. Compared with the Jetson Nano, the Teensy draws only about 100mA at 600 MHz, which helps battery life, and it costs less than the Nano once accessories are included. Compared with the STM32 Nucleo, the Teensy has a higher clock speed (600 MHz versus up to 480 MHz), and it can be programmed from the Arduino IDE with the Teensyduino extension, which lowers the learning curve for a student team [22].
 
 Teensy also has drawbacks. It is a bare board with no built-in ST-LINK-style debugger, so debugging relies mostly on serial prints, whereas the Nucleo includes a debugger and the STM32CubeIDE setup tools. It also has less official RTOS tooling than the STM32, so running FreeRTOS would depend on community ports rather than generated project scaffolding. Next to the Jetson Nano, it has no GPU or camera pipeline, and it has no built-in Wi-Fi or Bluetooth, so AprilTag detection would have to run on a separate camera module or companion computer and send results over UART or I2C. Headers may also need to be purchased and soldered separately, depending on the version. Overall, the Teensy is a strong, low-power, low-cost choice for the real-time control layer, but it works best paired with a vision module rather than replacing one [23],[24].
 
-Raspberry Pi and Pi Pico
+Raspberry Pi Pico 2 Development Board
 
-<img width="405" height="305" alt="image" src="https://github.com/user-attachments/assets/5fed3e79-86d1-4996-8c15-a6ca176b3e2a" />
 <img width="480" height="191" alt="image" src="https://github.com/user-attachments/assets/55b65784-3e62-4707-97dc-ee9a5e1bcf16" />
 
 
-Raspberry Pi 5(left) & Raspberry Pi Pico (right)
+Raspberry Pi Pico
 
-The Raspberry Pi 5 is a full single-board computer: a quad-core 2.4 GHz Arm Cortex-A76 processor with dual-band Wi-Fi, Bluetooth 5.0, a 40-pin GPIO header, and two MIPI ports for cameras or displays [25]. That makes it a middle option between the Jetson Nano and the microcontroller boards. It could run AprilTag detection and color detection in Python or OpenCV on a connected camera, so it could act as the vision companion computer your draft describes without the Jetson's GPU-oriented setup. It also benefits from a very large community and Linux software ecosystem. Its drawbacks are similar to Jetson's, though. It recommends a 5V/5A USB-C power supply, which is a substantial load for a battery-powered robot [26]. Prices have also varied considerably by retailer and memory size, and the accessories (power supply, cooling, microSD card) add to the cost [25]. Because it runs a general-purpose Linux operating system rather than an RTOS, it is also a poor fit for the 5 to 10 ms motor control loop described in your RTOS section, and it has no analog inputs for sensors. So it works best as the vision layer paired with a microcontroller, not as the main controller.
+The Raspberry Pi Pico 2 is a microcontroller board and competes directly with
+the Teensy 4.1 and STM32 Nucleo. It uses the RP2350 chip with dual Cortex-M33
+cores at 150 MHz, 520 KB of SRAM, and 4 MB of flash [27]. At about $5, it is
+by far the cheapest board in this comparison. It offers 26 GPIO pins, 3 ADC
+inputs, 24 PWM channels, and programmable I/O (PIO) blocks that can handle
+custom interfaces such as encoder reading [28]. It can be programmed in
+C/C++, MicroPython, or the Arduino IDE, and drag-and-drop programming over
+USB keeps setup simple for a student team [28].
 
-The Raspberry Pi Pico 2 is a microcontroller board and competes directly with the Teensy and STM32 Nucleo. It uses the RP2350 chip with dual Cortex-M33 cores at 150 MHz, 520KB of SRAM, and 4MB of flash [27]. It is by far the cheapest board in this comparison, at about $5, and it offers 26 GPIO pins, 3 ADC inputs, 24 PWM channels, and programmable I/O blocks that can handle custom interfaces such as encoder reading [28]. It can be programmed in C/C++, MicroPython, or the Arduino IDE, and drag-and-drop programming over USB keeps setup simple for a student team [28]. Its limitations are a lower clock speed than the Teensy 4.1 (600 MHz) or Nucleo-H743ZI2 (480 MHz), less memory, and only three ADC channels, which could be tight if the robot uses many analog distance sensors. It also has no built-in debugger, so debugging needs either serial output or the separate Raspberry Pi Debug Probe [25], and there is no Wi-Fi or camera interface, so vision would again have to run on a separate board. Still, 150 MHz is more than enough for a PID loop and wall following, so the Pico 2 is a strong low-cost option for the real-time control layer, and it could pair with a Raspberry Pi 5 for vision.
-
+Its limitations are a lower clock speed than the Teensy 4.1 (600 MHz) or the
+Nucleo-H743ZI2 (480 MHz), less memory, and only three ADC channels, which
+could be tight if the robot uses many analog distance sensors. It has no
+built-in debugger, so debugging relies on serial output or the separate
+Raspberry Pi Debug Probe [27]. It also has no camera interface, and the
+standard Pico 2 has no Wi-Fi, so vision would have to run on a separate board.
+Still, 150 MHz is more than enough for a PID loop and wall following, so the
+Pico 2 is a strong low-cost option for the real-time control layer and could
+be paired with a Raspberry Pi 5 for vision.
 Price Comparison
 
 | Board | Processor | Clock Speed | Approximate Price | Camera Compatible |
@@ -688,7 +734,61 @@ Price Comparison
 | Raspberry Pi 5 | Quad-core ARM Cortex-A76 (Broadcom BCM2712) + VideoCore VII GPU | 2.4GHz | $110 | USB Camera, CSI Camera |
 | Raspberry Pi Pico 2 | Dual-core ARM Cortex-M33 (RP2350) | 150MHz | $18 | Camera over UART or I2C. |
 
-Proposed Solution:
+#### Weighted Trade Study
+
+The boards were evaluated against criteria derived from the robot's
+specifications. Each criterion is tied to a requirement, and weights reflect
+its importance to mission success. Scores use a 1 to 5 scale
+(1 = poor, 3 = acceptable, 5 = excellent).
+
+#### Criteria and Weights
+
+| # | Criterion | Tied Specification | Weight |
+| --- | --- | --- | --- |
+| 1 | Real-time control | REQ-1: 5 to 10 ms motor control loop with deterministic timing | 20% |
+| 2 | Vision capability | REQ-2: AprilTag and color detection from a camera | 15% |
+| 3 | Power consumption | REQ-3: battery-powered operation from a 5 V supply | 15% |
+| 4 | Cost | REQ-4: project budget, including required accessories | 15% |
+| 5 | I/O and interfaces | REQ-5: analog distance sensors, PWM for motors, encoders, UART/I2C | 15% |
+| 6 | Ease of development | REQ-6: student team with limited embedded experience | 10% |
+| 7 | Debug and RTOS tooling | REQ-7: RTOS support and ability to debug | 10% |
+| | **Total** | | **100%** |
+
+#### Weighted Decision Matrix
+
+| Criterion (Weight) | Jetson Nano | Raspberry Pi 5 | STM32 Nucleo-H743ZI2 | Teensy 4.1 | Raspberry Pi Pico 2 |
+| --- | :-: | :-: | :-: | :-: | :-: |
+| Real-time control (20%) | 2 | 2 | 5 | 5 | 4 |
+| Vision capability (15%) | 5 | 4 | 1 | 1 | 1 |
+| Power consumption (15%) | 1 | 1 | 3 | 4 | 5 |
+| Cost (15%) | 2 | 2 | 4 | 4 | 5 |
+| I/O and interfaces (15%) | 2 | 2 | 5 | 5 | 3 |
+| Ease of development (10%) | 3 | 4 | 2 | 5 | 5 |
+| Debug and RTOS tooling (10%) | 3 | 3 | 5 | 2 | 3 |
+| **Weighted total (out of 5)** | **2.50** | **2.45** | **3.65** | **3.80** | **3.70** |
+
+#### Scoring Rationale
+
+| Criterion | Basis for Scores |
+| --- | --- |
+| Real-time control | The Jetson Nano and Raspberry Pi 5 run Linux, so timing has jitter. The STM32 and Teensy are bare-metal or RTOS capable. The Pico 2 is slower at 150 MHz but sufficient for a PID loop. |
+| Vision capability | The Jetson Nano has a GPU, VPI, and CSI support. The Raspberry Pi 5 has CSI and OpenCV but no CUDA acceleration. The microcontrollers need an external camera module. |
+| Power consumption | The Jetson Nano (5 to 10 W) and Raspberry Pi 5 (5 V/5 A supply recommended) draw the most. The STM32 board draws about 0.5 to 0.8 W. The Teensy draws about 100 mA at 600 MHz. The Pico 2 draws the least. |
+| Cost | Based on the price table plus accessories noted in the text (power supply, cooling, storage). |
+| I/O and interfaces | The Jetson Nano and Raspberry Pi 5 have no analog inputs. The Teensy has 18 ADC channels and 55 I/O pins. The Pico 2 has only 3 ADC channels. |
+| Ease of development | The STM32 requires low-level configuration (clock tree, NVIC, timers). The Teensy and Pico 2 use Arduino or MicroPython. |
+| Debug and RTOS tooling | The STM32 has ST-LINK and generated FreeRTOS scaffolding. The Teensy relies on serial prints and community RTOS ports. The Pico 2 needs a separate Debug Probe. |
+
+
+
+The Jetson Nano and Raspberry Pi 5 score lowest because they are not suited to
+the real-time control layer, but they remain the strongest options for vision.
+Among the microcontrollers, the Teensy 4.1, Pico 2, and STM32 are close. The
+STM32 Nucleo is selected as the master controller because of its ST-LINK
+debugging, generated FreeRTOS support, and I/O capability, which become the
+deciding factors when debugging and RTOS tooling are weighted more heavily.
+
+#### Proposed Solution:
 
 ROS 2 vs RTOS for this project
 
@@ -791,7 +891,15 @@ The competition awards 25 points if the robot raises a flag displaying the team�
 
 Several possible methods were considered for this task. One option is a linear solenoid, which could release a spring-loaded latch and allow a spring to raise the flag. This approach would provide fast actuation and would only require the solenoid to remain energized briefly. However, the design would require additional components such as a spring, mechanical latch, solenoid driver, and protection circuitry. Another possible solution is a DC gearmotor, which would provide high torque but would require additional position control and a motor driver.
 
-The solution we decided on is a servo motor. The servo will directly rotate the flag arm from its stored position to its raised position when commanded by the master controller. A servo was selected because it provides controlled angular positioning in a compact package and can be driven using the PWM control hardware already planned for the robot. The team’s current power architecture includes a regulated 5 V servo supply and a PWM controller, allowing the flag mechanism to be incorporated without adding a separate high-current actuator control system.
+### Flag-Raising Actuator Comparison
+
+| Option | Approx. Cost | Pros | Cons |
+|---|---:|---|---|
+| **Servo Motor — Selected** | **$8–$25** | Precise angular position control; compact and lightweight; integrates with the existing 5 V servo power system and PWM controller; simple coding because the controller only needs to command stored and raised positions; no separate position sensor is normally required | Must provide enough torque to raise and hold the flag; can draw high current if stalled; linkage must be designed carefully; mechanical stops may be needed |
+| **Solenoid + Spring** | **$18–$30** | Fast deployment; simple ON/OFF operation; low operating time; coding is relatively simple because the controller only needs to energize the solenoid for a short timed pulse and prevent repeated activation | Requires a spring, latch, MOSFET/driver, and flyback protection; limited position control; additional mechanical components increase complexity |
+| **DC Gearmotor** | **$16–$40+** | High torque; flexible range of motion; speed can be controlled with PWM | Requires a separate motor driver; more complicated coding because direction, speed, and stopping position must be controlled; likely requires an encoder or limit switch; more wiring and components |
+
+The solution we decided on is a servo motor. The servo will directly rotate the flag arm from its stored position to its raised position when commanded by the master controller. A servo was selected because it provides controlled angular positioning in a compact package and can be driven using the PWM control hardware already planned for the robot. The team’s current power architecture includes a regulated 5 V servo supply and a PWM controller, allowing the flag mechanism to be incorporated without adding a separate high-current actuator control system. Safety considerations for the flag mechanism will follow the risk-reduction approach of ISO 12100:2010. The primary hazards identified for the mechanism are unexpected servo motion, mechanical binding, pinch points around the linkage, and interference between the raised flag and other robot components. These risks will first be reduced mechanically by limiting the servo's allowable travel and providing mechanical stops that prevent the linkage from rotating into the chassis or beyond its intended deployed position. Software position limits will provide additional protection but will not be relied upon as the only means of preventing excessive travel.
 
 For the tire-changing mechanism, the actuators chosen will be decided by the mechanical team’s design. They presented two options for us: one is a servo-controlled claw that starts by carrying the red tire. During the pitstop maneuver, the robot would drop the red tire and use the camera to identify the location of the blue tire. The servo claw could then be used to pick up the blue tire and continue with the race. This design would be simple and would not take up much space for the robot; however it would require precise positioning based on data received from the camera subsystem.
 
@@ -806,6 +914,17 @@ The second proposed solution for the tire-changing mechanism is a “motorized s
 SECON Robot with Motorized Scoop Design [5]
 
 During normal operation, the flag servo will remain in its stored position while the robot completes the first two laps and the pit-stop task. Once the master controller determines that the robot has entered the final lap, it will command the servo to rotate the flag into the raised position. The mechanism will include mechanical stops to prevent the servo from rotating beyond the intended range. The servo position and linkage geometry will be finalized during prototyping to ensure that the flag can be stored within the robot’s legal starting configuration and raised reliably during the race. Competition permits the robot to expand beyond its starting dimensions after the match begins, which provides additional flexibility for the deployed flag mechanism.
+
+### Tire-Changing Concept Comparison
+
+| Option | Approx. Cost | Pros | Cons |
+|---|---:|---|---|
+| **Servo-Controlled Claw** | **$8–$30** | Compact; relatively inexpensive; precise grip; integrates with the existing servo power and PWM system; servo-control code is simple because predefined open and closed positions can be commanded | Overall coding is more difficult because the camera and navigation system must accurately locate the blue tire and position the claw before pickup; small alignment errors may cause a failed pickup; gripping force must be sufficient |
+| **Motorized Scoop + Tire Release** | **$20–$50+** | Larger pickup area; more tolerant of tire location; navigation and camera code can be simpler because the robot does not need to align as precisely with the tire; could sweep across part of the pit area to improve pickup reliability | Bulkier and heavier; requires additional motor/actuator hardware; higher power consumption; actuator code may require motor direction, timing, limit switches, or position feedback; more mechanically complex |
+
+We selected the motorized scoop over the servo-controlled claw because it provides a larger and more forgiving pickup area for the blue tire. While the claw would require the robot and camera subsystem to position the gripper very accurately around the tire, the scoop can collect the tire even if the robot is slightly misaligned. This reduces the precision required from the vision and navigation systems and should improve the overall reliability of the pit-stop maneuver. Although the scoop requires a larger and somewhat more complex mechanical design, the team determined that the increased tolerance to positioning errors and greater likelihood of successfully collecting the tire outweighed these disadvantages. The tire-changing mechanism will be evaluated using the same ISO 12100 risk-assessment process. Potential hazards include unexpected scoop movement, pinch points between the scoop and chassis, interference with the drivetrain, and loss of the carried tire. The mechanical team and electrical team will jointly define the scoop's allowable travel before the actuator is selected. Mechanical limits will be used where practical to prevent the mechanism from entering an unsafe configuration. Activation of the robot's emergency-stop system will disable both the flag and tire-changing actuators, and resetting the emergency stop will not automatically resume an interrupted actuator movement.
+
+Verification of these safety requirements will be performed during actuator subsystem testing. Each mechanism will be commanded through its full intended operating range while checking for binding, mechanical interference, excessive travel, and unintended motion. Emergency-stop functionality will also be tested while each actuator is moving. A successful test requires actuator motion to stop when the emergency stop is activated and requires the actuator to remain inactive after the emergency stop is reset until a new intentional command is issued. Any newly identified hazard will be documented and the design will be modified before system-level integration.
 
 ### Obstacle & Boundary Detection
 
@@ -982,7 +1101,6 @@ Sensor Option Comparison
 
 <img width="958" height="685" alt="image" src="https://github.com/user-attachments/assets/b315661e-b0f3-4d35-92f9-3a0a851dbe9b" />
 
-
 ### Power & Battery Management
 
 ###### Purpose and Functions Overview:
@@ -993,77 +1111,120 @@ The selected design uses an OVONIC 3S, 11.1 V nominal, 6500 mAh lithium-polymer 
 
 The Subsystem Functions:
 
-Accept battery power through the selected battery connector.
+* Accept battery power through the selected battery connector.
 
-Distribute raw battery voltage to the motor driver (Cytron MDD10A).
+* Distribute raw battery voltage to the motor driver (such as the Cytron MDD10A).
 
-Produce a shared regulated voltage supply rail for the control hardware and servo power branch.
+* Produce a shared regulated 5V voltage supply rail to power control hardware, vision processors, and the servo distribution branch.
 
-Use available regulated outputs for compatible low-voltage peripherals. This is subject to current limits.
+* Use available regulated outputs for compatible low-voltage peripherals. This is subject to current limits.
 
-Provide a defined startup and fault-response sequence.
+* Provide a defined startup and fault-response sequence.
 
-Include the required battery disconnect, inline fusing, and circuit protection.  This includes overcurrent safeguards.
-
-The MDD10A supports motor supplies from 5 to 30V and accepts 3.3V or 5V PWM/DIR control signals. This makes it a documented interface compatible with a 3S battery supply. It also makes it compatible with the microcontroller’s 3.3V control signals [29].
+* Include the required battery disconnect, inline fusing, and circuit protection.  This includes overcurrent safeguards.
 
 ###### Operating Modes
 
-Off - The battery is disconnected and is no longer externally supplying the power rails that are energized.
+* Off - The battery is physically or electrically disconnected and is no longer externally supplying the power rails that are energized.
 
-Startup/Arming - Connecting the battery energizes the motor-driver supply and the 5V converter. The controllers initiate and hold the actuator commands inactive until the startup checks are complete.
+* Startup/Arming - Connecting the battery energizes the main converter and motor-driver supply lines. The controllers initiate and hold the actuator commands inactive until the startup and voltage checks are complete.
 
-Run - The controllers permit the motor and servo operation. It also collects available sensor and diagnostic information.
+* Run - The controllers permit the motor and servo operation. It also collects available sensor and diagnostic information.
 
-Fault – This can be a battery low-voltage sag, overcurrent draw, or thermal limit threshold. The controller prevents the actuator commands when it detects a defined fault. The fault detection and reset behavior depends on the monitoring functions that are implemented.
+* Fault – This can be a battery low-voltage sag, overcurrent draw, or thermal limit threshold. The controller prevents the actuator commands when it detects a defined fault. The fault detection and reset behavior depends on the monitoring functions that are implemented.
 
-Emergency Stop - This is a selected hardware disconnect that interrupts battery power independently of normal control software. It stores downstream energy and alternative power sources.
-
-With these components, startup sequencing controls actuator commands rather than the physical application of the battery power to the motor bus. The MDD10A uses PWM and DIR inputs for each channel [30]. Emergency-stop reset will not initiate motion automatically. The final implementation will follow ISO 13850 emergency-stop principles. This is done without claiming standards of compliance solely from the presence of a switch [31].
+* Emergency Stop - This is a selected hardware disconnect that interrupts battery power independently of normal control software. It stores downstream energy and alternative power sources.
 
 ###### Power Architecture and Voltage Rails
 
-All control and power branches will share a common ground reference. To minimize noise and coupling, high-current motor and servo wiring will be routed separately from the low-current signal connections.  Additionally, decoupling and bypass capacitors will be placed across high-draw supply lines near driver inputs. This will suppress voltage noise and deliver immediate local current during sudden load spikes [46].
+All control and power branches will share a common ground reference. To minimize noise and coupling, high-current motor and servo wiring will be routed separately from the low-current signal connections.  Additionally, decoupling and bypass capacitors will be placed across high-draw supply lines near driver inputs. This will suppress voltage noise and deliver immediate local current during sudden load spikes [46]. If a four-motor drivetrain is used, two motors may be connected to each channel, where the drivetrain arrangement is permitted. The final motor allocation will identify which positions will be used by which motors.
 
-The raw battery bus will supply the MDD10A directly. The proposed 9.0-12.6 V design range falls within the documented 5-30 V supply range. However, the lower battery operating limit remains subject to the selected specifications and measured voltage sag of the pack [32]. The MDD10A provides two independently controlled channels; each one is rated for 10 A continuous and 30A peak for 10 seconds [32].
+* Raw Battery Bus (VBAT): Supplies the primary motor drivers directly within a 9.0 - 12.6V operating range.
 
-If a four-motor drivetrain is used, two motors may be connected to each channel, where the drivetrain arrangement is permitted. The final motor allocation will identify which positions will be used by which motors.
+* Regulated 5V Bus: Produced by the Volrantise 12V/24V to 5V 15A converter. This delivers up to 75W of usable capacity. The shared bus feeds onboard microcontrollers, vision modules, and downstream auxiliary distribution paths. 
 
-The converter will supply the common 5 V bus. Its advertised 15 A output corresponds to 75W of power. However, the usable capacity will depend on its input range, cooling requirements, and measured performance. This rail is intended to supply onboard microcontrollers (such as an STM32/MCU), vision boards, and  the servo-power branch. The converter capacity will be judged for the combined load, not assigned independently to the servo and compute branches. Testing allows checks to be done, which will either cause simultaneous servo movement, which causes supply drop, or controller resets.
+* Auxiliary Logic Regulation: Local linear regulators (LDOs) or secondary step-down components step down the 5V bus to supply the localized 3.3V logic and sensor demands where required. 
 
-Four MG996R servos draw power from the 5 V bus through the distribution path using connectors and conductors. The connectors and conductors are suitable for the measured load. A PCA9685 generates the PWM control pulses, but this does not regulate servo power. VCC supplies internal chip logic, while V+ supplies the servo-power distribution [33].
+###### Alternatives Considered
 
-Proposed Connections:
+* OVONIC 3S LiPo Battery + Volrantise Converter
 
-PCA9685 VCC - 3.3V logic supply
+  * Pros:
 
-PCA9685 V+ - Shared 5V servo supply
+    * There is a high discharge rate (120C, 6500 mAh) which easily handles peak transient currents from the motor drivers and servos. This is also without severe voltage sags [29, 32]. 
 
-PCA9685 GND - Common system ground
+    * Having high efficieny switching buck conversion minimizes the thermal waste and it maintains stable regulated power rails [25, 26].
 
-SDA/SCL pull-ups - 3.3V, not 5V
+    * Having a compact footprint with standard XT60 connectors allows for secure, and easily swappable physical integration.
+    
+  * Cons:
+    
+    * This option requires active battery voltage monitoring to prevent over-discharge [29].
 
-PWM output - Servo signal inputs
+    * LiPo chemistry demands strich adherence to safe charging and storage practices [1].
+    
+* Dual 18650 Li-Ion Packs + Linear Regulators
+
+  * Pros:
+
+    * This option has flexible physical packaging to fit irregular spaces within teh chassis envelope.
+
+    * It has individual cells which are readily available off the shelf.
+
+  * Cons:
+
+    * There are linear voltage regulators that burn excess voltage as heat under heavy motor loads. This causes poor thermal efficiency [26].
+
+    * There has to be custom spot-welding and cell-holder fabrication which introduces risks of loose connections under vibration.
+
+    * The standard cells exhibit higher internal resistance and they sag heavily under high motor stall currents. 
+
+* 12V Lead-Acid Battery + Standard Buck Converters
+
+  * Pros:
+
+    * This option has a high stable chemistry and inherently forgiving charging characteristics.
+
+    * It has a low upfront cost for raw storage capacity.
+
+  * Cons:
+
+    * This options is extremely heavy and bulky, which penalizes the agility, payload capacity, and speed [1]. 
+
+    * It has lower discharge current capabilities. This can trigger system brwonouts during simultaneous multi-motor activation. 
+
+* Direct Battery Powering of All Logic (No Regulation): This will result in a wide voltage sag under motor load. This will also cause the microcontroller to reset and have unpredictable logic states.
+
+* Separate Isolated Battery Packs for Logic and Motors: This prevent motor noise from affecting logic. It also carries multiple independent batter packs which adds unnecessary weight. It will also increase charging complexity, and complicates the emergency-stop wiring. 
 
 Compatible sensor modules may be powered from the selected boards’ embedded regulated outputs. This allows the total connected sensor, and interface loads to be calculated before using it as the shared sensor supply. [34]
+
+###### Power Subsystem Trade Study
+| Evaluation Criteria | Weight | Option 1: OVONIC 3S LiPo + Volrantise Converter *(Selected)* | Option 2: Dual 18650 Li-Ion Packs + Linear Regulators | Option 3: 12V Lead-Acid Battery + Standard Buck Converters |
+| :--- | :---: | :---: | :---: | :---: |
+| **Current Delivery & Peak Headroom** | 30% | **5** (6500 mAh, 120C high discharge easily handles 15A+ peaks) | **2** (Standard 18650 packs sag heavily under high motor stall currents) | **3** (Good capacity, but excessively heavy and bulky) |
+| **Efficiency & Thermal Control** | 25% | **4** (High-efficiency switching buck conversion minimizes heat) | **3** (Linear regulators burn excess voltage as heat under load) | **4** (Decent conversion, but heavy overall system weight penalty) |
+| **Integration & Form Factor** | 20% | **5** (Compact, standard XT60 integration with robot frame) | **4** (Custom cell configuration required, risk of loose spot-welds) | **1** (Too heavy and large for an agile autonomous stock car) |
+| **Cost & Availability** | 25% | **4** (Off-the-shelf readily available hobby RC components) | **3** (Requires building custom cell holders and safety circuits) | **4** (Inexpensive battery, but requires specialized heavy chargers) |
+| **Weighted Total Score** | **100%** | **4.50 / 5.0** | **2.90 / 5.0** | **3.10 / 5.0** |
 
 ###### Hardware Interfaces and Control Signals
 
 The subsystem will use the following interfaces:
 
-BAT_IN - This is the battery’s actual connector and the verified compatible mating cable.
+* BAT_IN - This is the battery’s actual connector and the verified compatible mating cable.
 
-PWM1/DIR1 and PWM2/DIR2 - Teensy control signals for the two MDD10A channels.
+* PWM1/DIR1 and PWM2/DIR2 - Teensy control signals for the two MDD10A channels.
 
-I2C_CTRL - This is for communication with the PCA9685 and is compatible with sensor modules.
+* I2C_CTRL - This is for communication with the PCA9685 and is compatible with sensor modules.
 
-Power measurement points - These are accessible locations for checking the battery, 5V, and selected 3.3V supplies.
+* Power measurement points - These are accessible locations for checking the battery, 5V, and selected 3.3V supplies.
 
-Hardware disconnect - This is the emergency power-interruption device.
+* Hardware disconnect - This is the emergency power-interruption device.
 
 ###### Protection, Fault Response, and Safety Verification
 
-The main fuse will be selected after the operating and startup currents are established. Fuse sizing will consider the protected wire and connector ratings, current, motor and servo transients, temperature, and fuse time-current characteristics. Littelfuse guidance supports this application-specific method rather than having a fixed current multiplier. [35, 36]
+The protection architecture is driven by the requirements identified in ISO 13850:2015 and IEC 62133-2:2017 + AMD1:2021. The emergency-stop behavior implements the requirements of ISO 13850 Sec. 4.1.1.2 by overriding normal actuator commands and preventing automatic restart following reset. Battery protection follows the principles of IEC 62133-2 Secs. 5.4-5.6 by maintaining the selected battery within its documented voltage and current operating region and by using wiring, connectors, and protection devices appropriate for the anticipated electrical load. The main fuse will be selected after the operating and startup currents are established. Fuse sizing will consider the protected wire and connector ratings, current, motor and servo transients, temperature, and fuse time-current characteristics. Littelfuse guidance supports this application-specific method rather than having a fixed current multiplier. [35, 36]
 
 The DuPont ribbon cables are reserved for suitable low-current signal connections, whereas battery, motor, and servo power wiring requires separate verified current-carrying capability.
 
@@ -1071,66 +1232,111 @@ The final design requires an accessible hardware disconnect, maintaining the tar
 
 Verification Addresses:
 
-Physical stopping behavior
+* Physical stopping behavior
 
-Residual voltage from capacitors
+* Residual voltage from capacitors
 
-USB connections that could keep controller boards powered
+* USB connections that could keep controller boards powered
 
-Backup batteries attached to the OpenMV
+* Backup batteries attached to the OpenMV
 
-Prevention of unintended restart
+* Prevention of unintended restart
 
-The OpenMV board documents automatic power selection. This is among the supported sources and fallbacks to an attached battery. These alternative sources must be considered when defining what the E-stop disconnects [37]. Once battery monitoring is implemented, the controller hinders the motor and servo commands during a defined low-voltage fault. It will also record diagnostic information if sufficient power remains.
+The OpenMV board documents automatic power selection. This is among the supported sources and fallbacks to an attached battery. These alternative sources must be considered when defining what the E-stop disconnects [37]. Once battery monitoring is implemented, the controller hinders the motor and servo commands during a defined low-voltage fault. It will also record diagnostic information if sufficient power remains. Verification results will be recorded quantitatively. Emergency-stop testing will document the measured actuator shutdown time for each trial and whether any automatic restart occurs after reset. Power testing will record the battery voltage and current during representative simultaneous drivetrain and actuator operation. These measured results will be compared with the applicable system requirements and manufacturer limits and recorded as PASS or FAIL.
 
 ###### Inventory
 
-Energy storage and conversion: OVONIC 3S 11.1 V 6500 mAh 120C LiPo; volrantise 12V/24V to 5V 15A converter
+* Energy Storage: OVONIC 3S 11.1V 6500 mAh 120C LiPo battery
 
-Motor and servo control: Cytron MDD10A, PCA9685 board; four Deegoo-FPV MG996R servos
+* Conversion: Volrantise 12V/24V to 5V 15A DC-DC converter
 
-Drivetrain: Greartisan 12V 550 RPM gearmotor; JGB37-520 12V 333 RPM encoder gearmotor
-
-Control and vision: Microcontroller board (MCU/STM32); vision module; auxiliary logic hardware
-
-Sensors: Vl6180X modules; DFRobot VL53L7CX 8x8 ToF sensor; BNO085; AS5600 modules
-
-Listed wiring and hardware: ELEGOO Dupont ribbon cables; BESARME M@-M5 hardware assortment
-
-Items still to be specified include the fuse assembly, hardware disconnect, high-current baling and distribution, and any voltage and current monitoring or input protection circuitry.
+* Protection & Distribution: This is primary fuse assembly, heavy-duty hardware disconection switch, high-current cabling, and terminal blocks. Specific motor drivers, servos, and data bus components are integrated with their respective functional subsystems.  
 
 ###### Propose Verification Requirements
 
 Subsystem Shall:
 
-Accept the selected battery over a verified range compatible with the converter.
+* Accept the selected battery over a verified voltage range compatible with the power converter.
 
-Supply the MDD10A
+* Maintain acceptable supply voltage during the representative simultaneous motor and servo operation
 
-Keep each motor channel within its verified electrical and thermal limits
+* Keep microcontroller, vision, and logic signal inputs strictly within the permitted thresholds. 
 
-Maintain acceptable supply voltage during the representative simultaneous motor and servo operation
+* Keep external sensor loads within the supply board’s regulator’s capacity
 
-Keep Teensy, OpenMV, and other connected logic signals within their permitted voltage ranges
+* Provide an accessible hardware emergency disconnect
 
-Keep external sensor loads within the supply board’s regulator’s capacity
+* Prevent automatic actuator restart following the emergency-stop reset
 
-Provide a hardware emergency disconnect
+* Document and test the implemented fault-detection functions
 
-Prevent automatic actuator restart following the emergency-stop reset
-
-Document and test the implemented fault-detection functions
-
-<img width="692" height="839" alt="image" src="https://github.com/user-attachments/assets/10db6b5e-b4a0-4d05-8925-9236da2cae76" />
-
+<img width="712" height="862" alt="power_subsystem drawio" src="https://github.com/user-attachments/assets/de43eaf8-efa9-413e-bcb0-6192042fa4ed" />
 
 ## Ethical, Professional, and Standards Considerations
 
-The conceptual design connects autonomous navigation, energy efficiency, and responsible engineering. From the robot’s path planning to the AprilTag-based localization, the design captures the capability that is relevant to autonomous vehicles and search-and-rescue systems. This illustrates how the competition can support technologies that operate with limited human interaction and reduce the possibility of exposure to hazardous environments.
+The conceptual design connects autonomous navigation, energy efficiency, and responsible engineering.
 
-The design emphasizes efficient power management to complete tasks without recharging while remaining within the 30-volt power limit. Using available and reusable components helps control development costs, maintenance, and supports future projects. These all encourage an economical and sustainable design approach.
+### Standards-Driven Risk Assessment
 
-What guides the robot’s development and team practices is safety, reliability, and integrity. To be able to reduce risks, safety materials, an accessible emergency stop, testing, and inspection are required. To have accountability and effective collaboration throughout the project, fair competition, proper acknowledgement of sources, and honest documentation are recommended.
+The team will use the risk-assessment methodology of ISO 12100:2010 throughout detailed design and system testing. Risk assessment will not be treated as a one-time safety review. Each major subsystem will be evaluated by identifying hazards in accordance with Sec. 5.4, estimating the associated risk in accordance with Sec. 5.5, and evaluating whether further risk reduction is required in accordance with Sec. 5.6.
+
+Risk reduction will follow the three-step methodology of Sec. 6. Where practical, hazards will first be eliminated or reduced through inherently safer design. If sufficient reduction cannot be achieved through design alone, safeguards and protective measures will be applied. Information, warnings, or operating procedures will be used for residual risks that cannot reasonably be eliminated by the first two methods.
+
+For this robot, this process directly affects design decisions. Mechanical travel limits are used to reduce actuator interference and pinch hazards before software limits are considered. The hardware emergency stop provides an independent protective measure for unexpected drivetrain or actuator motion. Electrical risks are reduced through appropriately rated wiring, insulation, strain relief, overcurrent protection, and battery monitoring. The team will document newly identified hazards during testing and reevaluate the associated risk after mitigation to determine whether additional design changes are required.
+
+### Ethics and Sustainability
+
+The design emphasizes efficient power management to complete tasks without recharging while remaining within the 30-volt power limit. Using available and reusable components helps control development costs, maintenance, and supports future projects. These choices are carried out through the reuse, battery-life, and disposal measures in Table 2 (M3-M7).
+
+What guides the robot's development and team practices is safety, reliability, and integrity. To be able to reduce risks, safety materials, an accessible emergency stop, testing, and inspection are required. To have accountability and effective collaboration throughout the project, fair competition, proper acknowledgement of sources, and honest documentation are commitments the team makes.
+
+### Stakeholder Impact: Benefits, Disadvantages, and Mitigation
+
+The robot's path planning and AprilTag-based localization illustrate techniques used in autonomous vehicles and search-and-rescue systems, but the project itself is a single competition robot. The effects of this project are small and mostly local. To identify who is affected, the team considered every aspect of the robot's lifecycle from construction through to testing, competition, and disposal. Tables 1a and 1b summarize the groups who benefit and who are disadvantaged across economic, environmental, and societal contexts.
+
+**Table 1a: Who benefits from this project**
+
+| Context | Beneficiary | How they benefit |
+| --- | --- | --- |
+| Economic | TTU students on the team | Students build hands-on integration experience and portfolio work that applies directly to ECE and ME careers. |
+| Economic | ECE and ME departments | The project produces evidence for both departments' ABET student outcomes. A competitive entry also showcases both departments to prospective students. |
+| Economic | Future capstone teams | Reused parts and a published BOM reduce the cost of future builds. |
+| Environmental | Future capstone teams | Reusing this project's parts lets future teams build without purchasing new hardware, avoiding the extraction and disposal impacts described in D3 and D4. |
+| Societal | Future SECON teams | Published documentation, schematics, and code give teams at any school, including lower-resource ones (D1), a documented starting point. |
+| Societal | Competition audience | A working autonomous robot demonstrates engineering to conference attendees and banquet guests, which can encourage interest in ECE. |
+| Societal | Team members who own core subsystems | Owning a subsystem from research through testing builds in-depth, demonstrable experience in that area. |
+| Societal | Employers in autonomous systems | Team members gain practice with localization, sensing, and real-time control used in the autonomous-systems industry. |
+
+**Table 1b: Who is disadvantaged by this project**
+
+| ID | Context | Disadvantaged | How they are disadvantaged |
+| --- | --- | --- | --- |
+| D1 | Economic | Teams from lower-resource schools | Spending ~$900 on a build raises the bar for schools that can't match that budget. Better-funded teams can afford better sensors and compute, and that can turn into competition results. |
+| D2 | Economic | Other capstone teams that draw on the same departmental funds | Funding spent here isn't available to other teams. |
+| D3 | Environmental | Sanitation workers and communities near landfills | LiPo batteries and failed PCBs become waste when thrown out. LiPo batteries can start fires in garbage trucks and landfills. Both contribute to e-waste and require specialized disposal. |
+| D4 | Environmental | Communities near battery and electronics manufacturing and sourcing | The LiPo pack uses lithium and cobalt, and the motors use rare earths. Lithium extraction uses local water supplies in dry regions, and cobalt mining is associated with poor labor conditions. This project's share of that demand is small. |
+| D5 | Societal | People in camera view | Attendees will be within view of the robot's camera with no choice to opt out. This only becomes an issue if camera data is stored or transmitted. |
+| D6 | Societal | Team members with less embedded experience | Work on subsystems is divided based on members' existing experience, limiting the number of learning opportunities. |
+| D7 | Societal | Workers in jobs autonomy displaces | Autonomous navigation contributes to automation that reduces demand for drivers and delivery workers. This project's contribution is indirect and small. |
+
+Of these groups, teams from lower-resource schools (D1) carry the most significant cost, because it is structural and falls entirely outside the project. The environmental effects (D3, D4) can't be ignored but are considered small at this scale. D3 and D4 also share a cause with D2: buying and throwing away hardware. For that reason, reusing parts addresses all three. The camera concern (D5) depends on a design choice and is removed by M8. Two disadvantages are the counterpart of a benefit in Table 1a: the experience gained by subsystem owners comes partly at the expense of other members (D6), and the skills valued by autonomous-systems employers come from the same automation that reduces demand for other workers (D7).
+
+**Table 2: Mitigation for each disadvantaged group**
+
+| ID | Addresses | Mitigation | Type | Owner | Timing | Evidence |
+| --- | --- | --- | --- | --- | --- | --- |
+| M1 | D1 | Publish the BOM, schematics, PCB files, and code in a public repository after the competition. | Built-in | Team | After competition | Public repository link |
+| M2 | D1 | Recommend that the competition consider a robot cost cap or cost reporting requirement. | Recommended to sponsor (IEEE SoutheastCon) | Team | Post-competition feedback | Submitted feedback |
+| M3 | D2, D3, D4 | Set a budget ceiling, reuse parts from the previous TTU SECON robot and department inventory, and include cost as a criterion in every decision matrix. | Built-in | BOM lead | Before procurement | BOM column marking reused parts |
+| M4 | D2, D3, D4 | Return working parts to department inventory for future teams. | Built-in | Team | After competition | Inventory handoff list |
+| M5 | D3 | Follow a LiPo charging and storage protocol (storage voltage, fire-safe bag, no unattended charging) to extend pack life, and dispose of packs through TTU Environmental Health & Safety or a battery recycling drop-off. | Built-in | Power subsystem lead | Before first powered test | Written protocol; disposal record |
+| M6 | D3, D4 | Validate circuits on development boards before ordering the PCB to limit board revisions. | Built-in | PCB lead | Before PCB order | Test log dated before fabrication |
+| M7 | D4 | Size the battery from the power budget and purchase one pack rather than oversizing or buying spares. | Built-in | Power subsystem lead | Procurement | Power budget table |
+| M8 | D5 | Process camera frames in memory only; no images are stored or transmitted. | Built-in | Vision subsystem lead | Firmware design | Firmware review |
+| M9 | D6 | Pair each subsystem owner with a second team member and rotate integration and testing roles. | Built-in | Team | Throughout Capstone II | Task assignments in timeline |
+| M10 | D7 | Limit autonomy-related claims in the documentation to what the project actually demonstrates. | Built-in | Team | This revision | Revised Broader Implications section |
+
+Each built-in mitigation produces evidence that can be checked: the public repository, the written LiPo protocol and disposal record, the pre-fabrication test log, and the revised documentation. M2 is the only action outside the team's control; it will be submitted to IEEE SoutheastCon as a recommendation. Owner roles correspond to the subsystem assignments in the Division of Labor.
 
 ## Resources
 
@@ -1243,6 +1449,7 @@ Each team member will still be responsible for managing a subsystem and its deta
 
 [31] ANSI, "ISO 13850: Safety of Machinery – Emergency Stop Function – Principles for Design," ANSI Blog, Jul. 12, 2023. [Online]. Available: . [Accessed: Oct. 18, 2026].
 
+
 [32] Cytron Technologies, "10Amp 5V-30V DC Motor Driver (2 Channels) - MDD10A," Cytron Technologies Product Catalog, 2024. [Online]. Available: . [Accessed: Oct. 18, 2026].
 
 [33] L. Fried, "Adafruit 16-Channel 12-bit PWM/Servo Driver," Adafruit Learning System, Adafruit Industries, Brooklyn, NY, USA, Primary Guide ID 1126, 2024. [Online]. Available: . [Accessed: Oct. 18, 2026].
@@ -1275,6 +1482,8 @@ Each team member will still be responsible for managing a subsystem and its deta
 
 [47] “4WD Omnidirectional Mecanum Robot Car With Claw AI Visual Recognition Tracking for Arduino DIY Kit for UNO Programmable Robot,” Bestdealplus.com, 2026.  (accessed Oct. 23, 2026).
 
+[48] ISO, ISO 12100:2010, *Safety of machinery — General principles for design — Risk assessment and risk reduction*. Geneva, Switzerland: International Organization for Standardization, 2010.
+
 ## Statement of Contributions
 
 | Assignment | Assignee |
@@ -1289,5 +1498,5 @@ Each team member will still be responsible for managing a subsystem and its deta
 | Flag Raising & Tire-Changing Actuators Atomic Subsystem | Matthew |
 | Obstacle & Boundary Detection Atomic Subsystem | Austin |
 | Power & Battery Management Atomic Subsystem | Hadassah |
-| Ethical, Professional, and Standards Considerations | Hadassah |
+| Ethical, Professional, and Standards Considerations | Hadassah & Austin |
 | Resources | Kyle |
