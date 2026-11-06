@@ -1079,7 +1079,6 @@ Sensor Option Comparison
 
 <img width="958" height="685" alt="image" src="https://github.com/user-attachments/assets/b315661e-b0f3-4d35-92f9-3a0a851dbe9b" />
 
-
 ### Power & Battery Management
 
 ###### Purpose and Functions Overview:
@@ -1090,73 +1089,116 @@ The selected design uses an OVONIC 3S, 11.1 V nominal, 6500 mAh lithium-polymer 
 
 The Subsystem Functions:
 
-Accept battery power through the selected battery connector.
+* Accept battery power through the selected battery connector.
 
-Distribute raw battery voltage to the motor driver (Cytron MDD10A).
+* Distribute raw battery voltage to the motor driver (such as the Cytron MDD10A).
 
-Produce a shared regulated voltage supply rail for the control hardware and servo power branch.
+* Produce a shared regulated 5V voltage supply rail to power control hardware, vision processors, and the servo distribution branch.
 
-Use available regulated outputs for compatible low-voltage peripherals. This is subject to current limits.
+* Use available regulated outputs for compatible low-voltage peripherals. This is subject to current limits.
 
-Provide a defined startup and fault-response sequence.
+* Provide a defined startup and fault-response sequence.
 
-Include the required battery disconnect, inline fusing, and circuit protection.  This includes overcurrent safeguards.
-
-The MDD10A supports motor supplies from 5 to 30V and accepts 3.3V or 5V PWM/DIR control signals. This makes it a documented interface compatible with a 3S battery supply. It also makes it compatible with the microcontroller’s 3.3V control signals [29].
+* Include the required battery disconnect, inline fusing, and circuit protection.  This includes overcurrent safeguards.
 
 ###### Operating Modes
 
-Off - The battery is disconnected and is no longer externally supplying the power rails that are energized.
+* Off - The battery is physically or electrically disconnected and is no longer externally supplying the power rails that are energized.
 
-Startup/Arming - Connecting the battery energizes the motor-driver supply and the 5V converter. The controllers initiate and hold the actuator commands inactive until the startup checks are complete.
+* Startup/Arming - Connecting the battery energizes the main converter and motor-driver supply lines. The controllers initiate and hold the actuator commands inactive until the startup and voltage checks are complete.
 
-Run - The controllers permit the motor and servo operation. It also collects available sensor and diagnostic information.
+* Run - The controllers permit the motor and servo operation. It also collects available sensor and diagnostic information.
 
-Fault – This can be a battery low-voltage sag, overcurrent draw, or thermal limit threshold. The controller prevents the actuator commands when it detects a defined fault. The fault detection and reset behavior depends on the monitoring functions that are implemented.
+* Fault – This can be a battery low-voltage sag, overcurrent draw, or thermal limit threshold. The controller prevents the actuator commands when it detects a defined fault. The fault detection and reset behavior depends on the monitoring functions that are implemented.
 
-Emergency Stop - This is a selected hardware disconnect that interrupts battery power independently of normal control software. It stores downstream energy and alternative power sources.
-
-With these components, startup sequencing controls actuator commands rather than the physical application of the battery power to the motor bus. The MDD10A uses PWM and DIR inputs for each channel [30]. Emergency-stop reset will not initiate motion automatically. The final implementation will follow ISO 13850 emergency-stop principles. This is done without claiming standards of compliance solely from the presence of a switch [31].
+* Emergency Stop - This is a selected hardware disconnect that interrupts battery power independently of normal control software. It stores downstream energy and alternative power sources.
 
 ###### Power Architecture and Voltage Rails
 
-All control and power branches will share a common ground reference. To minimize noise and coupling, high-current motor and servo wiring will be routed separately from the low-current signal connections.  Additionally, decoupling and bypass capacitors will be placed across high-draw supply lines near driver inputs. This will suppress voltage noise and deliver immediate local current during sudden load spikes [46].
+All control and power branches will share a common ground reference. To minimize noise and coupling, high-current motor and servo wiring will be routed separately from the low-current signal connections.  Additionally, decoupling and bypass capacitors will be placed across high-draw supply lines near driver inputs. This will suppress voltage noise and deliver immediate local current during sudden load spikes [46]. If a four-motor drivetrain is used, two motors may be connected to each channel, where the drivetrain arrangement is permitted. The final motor allocation will identify which positions will be used by which motors.
 
-The raw battery bus will supply the MDD10A directly. The proposed 9.0-12.6 V design range falls within the documented 5-30 V supply range. However, the lower battery operating limit remains subject to the selected specifications and measured voltage sag of the pack [32]. The MDD10A provides two independently controlled channels; each one is rated for 10 A continuous and 30A peak for 10 seconds [32].
+* Raw Battery Bus (VBAT): Supplies the primary motor drivers directly within a 9.0 - 12.6V operating range.
 
-If a four-motor drivetrain is used, two motors may be connected to each channel, where the drivetrain arrangement is permitted. The final motor allocation will identify which positions will be used by which motors.
+* Regulated 5V Bus: Produced by the Volrantise 12V/24V to 5V 15A converter. This delivers up to 75W of usable capacity. The shared bus feeds onboard microcontrollers, vision modules, and downstream auxiliary distribution paths. 
 
-The converter will supply the common 5 V bus. Its advertised 15 A output corresponds to 75W of power. However, the usable capacity will depend on its input range, cooling requirements, and measured performance. This rail is intended to supply onboard microcontrollers (such as an STM32/MCU), vision boards, and  the servo-power branch. The converter capacity will be judged for the combined load, not assigned independently to the servo and compute branches. Testing allows checks to be done, which will either cause simultaneous servo movement, which causes supply drop, or controller resets.
+* Auxiliary Logic Regulation: Local linear regulators (LDOs) or secondary step-down components step down the 5V bus to supply the localized 3.3V logic and sensor demands where required. 
 
-Four MG996R servos draw power from the 5 V bus through the distribution path using connectors and conductors. The connectors and conductors are suitable for the measured load. A PCA9685 generates the PWM control pulses, but this does not regulate servo power. VCC supplies internal chip logic, while V+ supplies the servo-power distribution [33].
+###### Alternatives Considered
 
-Proposed Connections:
+* OVONIC 3S LiPo Battery + Volrantise Converter
 
-PCA9685 VCC - 3.3V logic supply
+  * Pros:
 
-PCA9685 V+ - Shared 5V servo supply
+    * There is a high discharge rate (120C, 6500 mAh) which easily handles peak transient currents from the motor drivers and servos. This is also without severe voltage sags [29, 32]. 
 
-PCA9685 GND - Common system ground
+    * Having high efficieny switching buck conversion minimizes the thermal waste and it maintains stable regulated power rails [25, 26].
 
-SDA/SCL pull-ups - 3.3V, not 5V
+    * Having a compact footprint with standard XT60 connectors allows for secure, and easily swappable physical integration.
+    
+  * Cons:
+    
+    * This option requires active battery voltage monitoring to prevent over-discharge [29].
 
-PWM output - Servo signal inputs
+    * LiPo chemistry demands strich adherence to safe charging and storage practices [1].
+    
+* Dual 18650 Li-Ion Packs + Linear Regulators
+
+  * Pros:
+
+    * This option has flexible physical packaging to fit irregular spaces within teh chassis envelope.
+
+    * It has individual cells which are readily available off the shelf.
+
+  * Cons:
+
+    * There are linear voltage regulators that burn excess voltage as heat under heavy motor loads. This causes poor thermal efficiency [26].
+
+    * There has to be custom spot-welding and cell-holder fabrication which introduces risks of loose connections under vibration.
+
+    * The standard cells exhibit higher internal resistance and they sag heavily under high motor stall currents. 
+
+* 12V Lead-Acid Battery + Standard Buck Converters
+
+  * Pros:
+
+    * This option has a high stable chemistry and inherently forgiving charging characteristics.
+
+    * It has a low upfront cost for raw storage capacity.
+
+  * Cons:
+
+    * This options is extremely heavy and bulky, which penalizes the agility, payload capacity, and speed [1]. 
+
+    * It has lower discharge current capabilities. This can trigger system brwonouts during simultaneous multi-motor activation. 
+
+* Direct Battery Powering of All Logic (No Regulation): This will result in a wide voltage sag under motor load. This will also cause the microcontroller to reset and have unpredictable logic states.
+
+* Separate Isolated Battery Packs for Logic and Motors: This prevent motor noise from affecting logic. It also carries multiple independent batter packs which adds unnecessary weight. It will also increase charging complexity, and complicates the emergency-stop wiring. 
 
 Compatible sensor modules may be powered from the selected boards’ embedded regulated outputs. This allows the total connected sensor, and interface loads to be calculated before using it as the shared sensor supply. [34]
+
+###### Power Subsystem Trade Study
+| Evaluation Criteria | Weight | Option 1: OVONIC 3S LiPo + Volrantise Converter *(Selected)* | Option 2: Dual 18650 Li-Ion Packs + Linear Regulators | Option 3: 12V Lead-Acid Battery + Standard Buck Converters |
+| :--- | :---: | :---: | :---: | :---: |
+| **Current Delivery & Peak Headroom** | 30% | **5** (6500 mAh, 120C high discharge easily handles 15A+ peaks) | **2** (Standard 18650 packs sag heavily under high motor stall currents) | **3** (Good capacity, but excessively heavy and bulky) |
+| **Efficiency & Thermal Control** | 25% | **4** (High-efficiency switching buck conversion minimizes heat) | **3** (Linear regulators burn excess voltage as heat under load) | **4** (Decent conversion, but heavy overall system weight penalty) |
+| **Integration & Form Factor** | 20% | **5** (Compact, standard XT60 integration with robot frame) | **4** (Custom cell configuration required, risk of loose spot-welds) | **1** (Too heavy and large for an agile autonomous stock car) |
+| **Cost & Availability** | 25% | **4** (Off-the-shelf readily available hobby RC components) | **3** (Requires building custom cell holders and safety circuits) | **4** (Inexpensive battery, but requires specialized heavy chargers) |
+| **Weighted Total Score** | **100%** | **4.50 / 5.0** | **2.90 / 5.0** | **3.10 / 5.0** |
 
 ###### Hardware Interfaces and Control Signals
 
 The subsystem will use the following interfaces:
 
-BAT_IN - This is the battery’s actual connector and the verified compatible mating cable.
+* BAT_IN - This is the battery’s actual connector and the verified compatible mating cable.
 
-PWM1/DIR1 and PWM2/DIR2 - Teensy control signals for the two MDD10A channels.
+* PWM1/DIR1 and PWM2/DIR2 - Teensy control signals for the two MDD10A channels.
 
-I2C_CTRL - This is for communication with the PCA9685 and is compatible with sensor modules.
+* I2C_CTRL - This is for communication with the PCA9685 and is compatible with sensor modules.
 
-Power measurement points - These are accessible locations for checking the battery, 5V, and selected 3.3V supplies.
+* Power measurement points - These are accessible locations for checking the battery, 5V, and selected 3.3V supplies.
 
-Hardware disconnect - This is the emergency power-interruption device.
+* Hardware disconnect - This is the emergency power-interruption device.
 
 ###### Protection, Fault Response, and Safety Verification
 
@@ -1168,57 +1210,45 @@ The final design requires an accessible hardware disconnect, maintaining the tar
 
 Verification Addresses:
 
-Physical stopping behavior
+* Physical stopping behavior
 
-Residual voltage from capacitors
+* Residual voltage from capacitors
 
-USB connections that could keep controller boards powered
+* USB connections that could keep controller boards powered
 
-Backup batteries attached to the OpenMV
+* Backup batteries attached to the OpenMV
 
-Prevention of unintended restart
+* Prevention of unintended restart
 
 The OpenMV board documents automatic power selection. This is among the supported sources and fallbacks to an attached battery. These alternative sources must be considered when defining what the E-stop disconnects [37]. Once battery monitoring is implemented, the controller hinders the motor and servo commands during a defined low-voltage fault. It will also record diagnostic information if sufficient power remains.
 
 ###### Inventory
 
-Energy storage and conversion: OVONIC 3S 11.1 V 6500 mAh 120C LiPo; volrantise 12V/24V to 5V 15A converter
+* Energy Storage: OVONIC 3S 11.1V 6500 mAh 120C LiPo battery
 
-Motor and servo control: Cytron MDD10A, PCA9685 board; four Deegoo-FPV MG996R servos
+* Conversion: Volrantise 12V/24V to 5V 15A DC-DC converter
 
-Drivetrain: Greartisan 12V 550 RPM gearmotor; JGB37-520 12V 333 RPM encoder gearmotor
-
-Control and vision: Microcontroller board (MCU/STM32); vision module; auxiliary logic hardware
-
-Sensors: Vl6180X modules; DFRobot VL53L7CX 8x8 ToF sensor; BNO085; AS5600 modules
-
-Listed wiring and hardware: ELEGOO Dupont ribbon cables; BESARME M@-M5 hardware assortment
-
-Items still to be specified include the fuse assembly, hardware disconnect, high-current baling and distribution, and any voltage and current monitoring or input protection circuitry.
+* Protection & Distribution: This is primary fuse assembly, heavy-duty hardware disconection switch, high-current cabling, and terminal blocks. Specific motor drivers, servos, and data bus components are integrated with their respective functional subsystems.  
 
 ###### Propose Verification Requirements
 
 Subsystem Shall:
 
-Accept the selected battery over a verified range compatible with the converter.
+* Accept the selected battery over a verified voltage range compatible with the power converter.
 
-Supply the MDD10A
+* Maintain acceptable supply voltage during the representative simultaneous motor and servo operation
 
-Keep each motor channel within its verified electrical and thermal limits
+* Keep microcontroller, vision, and logic signal inputs strictly within the permitted thresholds. 
 
-Maintain acceptable supply voltage during the representative simultaneous motor and servo operation
+* Keep external sensor loads within the supply board’s regulator’s capacity
 
-Keep Teensy, OpenMV, and other connected logic signals within their permitted voltage ranges
+* Provide an accessible hardware emergency disconnect
 
-Keep external sensor loads within the supply board’s regulator’s capacity
+* Prevent automatic actuator restart following the emergency-stop reset
 
-Provide a hardware emergency disconnect
+* Document and test the implemented fault-detection functions
 
-Prevent automatic actuator restart following the emergency-stop reset
-
-Document and test the implemented fault-detection functions
-
-<img width="692" height="839" alt="image" src="https://github.com/user-attachments/assets/10db6b5e-b4a0-4d05-8925-9236da2cae76" />
+<img width="712" height="862" alt="power_subsystem drawio" src="https://github.com/user-attachments/assets/de43eaf8-efa9-413e-bcb0-6192042fa4ed" />
 
 ## Ethical, Professional, and Standards Considerations
 
