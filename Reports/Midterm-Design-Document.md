@@ -629,6 +629,10 @@ A real-time operating system (RTOS) is a specialized operating system built to h
 
 On a single-core microcontroller, true parallel execution isn't possible. Instead, the RTOS scheduler allocates short time slots to different tasks, and because the processor is fast (for example, 72MHz), the switching happens so quickly that the tasks appear to run in parallel. Tasks are assigned priorities based on how critical they are and how tight their timing requirements are, so the scheduler can make sure high-priority tasks meet their deadlines[15].
 
+Software interrupts are a useful way to handle robot control code without making it overly complex. They simulate hardware interrupts by triggering a response whenever a specific condition is met. For example, a robot might start its boot sequence when a button is pressed, or halt a critical action when a sensor reading goes out of range.
+
+The key difference between interrupt-driven and polling-based code is how events are detected. With polling, the processor continuously checks a peripheral’s status in a loop. With interrupts, the peripheral notifies the processor only when an event occurs, which frees the processor to do other work in the meantime.
+
 Comparison of solutions:
 
 Jetson Nano
@@ -676,7 +680,7 @@ STM32 Board NUCLEO
 
 STM32 Nucleo-H743ZI2 Development Board
 
-STM32 Nucleo boards are a good fit for RTOS projects: they're affordable, include an ST-LINK debugger/programmer, and offer expansion headers, which makes prototyping and debugging convenient. STM32CubeIDE also makes it easier to configure pins and create RTOS tasks, since it can generate the FreeRTOS (CMSIS-RTOS) scaffolding automatically [21].
+STM32 Nucleo boards are a good fit for RTOS/ Interrupt-based projects: they're affordable, include an ST-LINK debugger/programmer, and offer expansion headers, which makes prototyping and debugging convenient. STM32CubeIDE also makes it easier to configure pins and create RTOS tasks, NVIC Interrupt since it can generate the FreeRTOS (CMSIS-RTOS) scaffolding automatically [21] and generate code for Interrupt task.
 
 This development board exhibits varying power consumption depending on whether the entire board or only the microcontroller (MCU) core is measured. When the entire board is powered via USB or an external supply, typical current consumption ranges from 150 mA to over 250 mA (approximately 0.5 W to 0.8 W at 5V) due to auxiliary components like the integrated ST-LINK debugger, status LEDs, and the onboard Ethernet transceiver. For the isolated STM32H743ZI MCU core, power efficiency scales at roughly 275 µA/MHz under typical running conditions; when operating at its peak clock speed of 400 MHz to 480 MHz, the core itself draws between 110 mA and 130 mA [29].
 
@@ -727,14 +731,14 @@ Price Comparison
 | Raspberry Pi 5 | Quad-core ARM Cortex-A76 (Broadcom BCM2712) + VideoCore VII GPU | 2.4GHz | $110 | USB Camera, CSI Camera |
 | Raspberry Pi Pico 2 | Dual-core ARM Cortex-M33 (RP2350) | 150MHz | $18 | Camera over UART or I2C. |
 
-## Weighted Trade Study
+#### Weighted Trade Study
 
 The boards were evaluated against criteria derived from the robot's
 specifications. Each criterion is tied to a requirement, and weights reflect
 its importance to mission success. Scores use a 1 to 5 scale
 (1 = poor, 3 = acceptable, 5 = excellent).
 
-### Criteria and Weights
+#### Criteria and Weights
 
 | # | Criterion | Tied Specification | Weight |
 | --- | --- | --- | --- |
@@ -747,7 +751,7 @@ its importance to mission success. Scores use a 1 to 5 scale
 | 7 | Debug and RTOS tooling | REQ-7: RTOS support and ability to debug | 10% |
 | | **Total** | | **100%** |
 
-### Weighted Decision Matrix
+#### Weighted Decision Matrix
 
 | Criterion (Weight) | Jetson Nano | Raspberry Pi 5 | STM32 Nucleo-H743ZI2 | Teensy 4.1 | Raspberry Pi Pico 2 |
 | --- | :-: | :-: | :-: | :-: | :-: |
@@ -760,7 +764,7 @@ its importance to mission success. Scores use a 1 to 5 scale
 | Debug and RTOS tooling (10%) | 3 | 3 | 5 | 2 | 3 |
 | **Weighted total (out of 5)** | **2.50** | **2.45** | **3.65** | **3.80** | **3.70** |
 
-### Scoring Rationale
+#### Scoring Rationale
 
 | Criterion | Basis for Scores |
 | --- | --- |
@@ -773,7 +777,6 @@ its importance to mission success. Scores use a 1 to 5 scale
 | Debug and RTOS tooling | The STM32 has ST-LINK and generated FreeRTOS scaffolding. The Teensy relies on serial prints and community RTOS ports. The Pico 2 needs a separate Debug Probe. |
 
 
-### Conclusion
 
 The Jetson Nano and Raspberry Pi 5 score lowest because they are not suited to
 the real-time control layer, but they remain the strongest options for vision.
@@ -782,7 +785,7 @@ STM32 Nucleo is selected as the master controller because of its ST-LINK
 debugging, generated FreeRTOS support, and I/O capability, which become the
 deciding factors when debugging and RTOS tooling are weighted more heavily.
 
-Proposed Solution:
+#### Proposed Solution:
 
 ROS 2 vs RTOS for this project
 
