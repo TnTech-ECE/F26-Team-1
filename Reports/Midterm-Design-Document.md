@@ -742,7 +742,7 @@ its importance to mission success. Scores use a 1 to 5 scale
 | 2 | Vision capability | REQ-2: AprilTag and color detection from a camera | 15% |
 | 3 | Power consumption | REQ-3: battery-powered operation from a 5 V supply | 15% |
 | 4 | Cost | REQ-4: project budget, including required accessories | 15% |
-| 5 | I/O and interfaces | REQ-5: analog distance sensors, PWM for 4 motors, encoders, UART/I2C | 15% |
+| 5 | I/O and interfaces | REQ-5: analog distance sensors, PWM for motors, encoders, UART/I2C | 15% |
 | 6 | Ease of development | REQ-6: student team with limited embedded experience | 10% |
 | 7 | Debug and RTOS tooling | REQ-7: RTOS support and ability to debug | 10% |
 | | **Total** | | **100%** |
