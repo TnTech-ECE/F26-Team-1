@@ -800,7 +800,7 @@ Several time-constrained tasks benefit from RTOS. A motor control loop, such as 
 
 The proposed solution is to use the NUCLEO-H753ZI development board. It provides the hardware timers, encoder interfaces, PWM channels, ADCs with DMA, and communication peripherals needed to interface all sensors and actuators on one board. Many team members are familar with the STM32 archtecture, and its on-board ST-LINK debugger addresses the debugging limitation noted for the Teensy 4.1 and Pico 2. The proposed firmware will use an interrupt-driven design with a polled state machine instead of an RTOS. If the number of concurrent tasks grows beyond what a single interrupt-based loop can handle, migrating to FreeRTOS via STM32CubeIDE remains possible on the same hardware. A microcontroller-based master controller was selected over the Jetson Nano and Raspberry Pi 5. As previously mentioned in the Comparative Analysis of Potential Solutions section, a single-board computer running Linux is not necessary for the requirements of this competition. A microcontroller is much more suited to deterministic control and sensor I/O. While the Teensy 4.1 has a faster clock for a lower price, it has no on-board debugger and is limited in number of pins. The Raspberry Pi Pico 2 is the cheapest option but has a 150 MHz clock, less memory, and fewer ADC channels. The Nucleo provides more computing margin, more analog inputs, and more memory for the sensor suite.
 
-### Motor Control – Ty
+### Motor Control
 
 For the robot to move consistently and accurately during the competition, we need to design reliable way to control the speed and direction of each motor. We are looking at using 12V brushed DC gearmotors that have built-in encoder. The microcontroller will generate a pulse-width modulation (PWM) signal, and the driver will switch the 12V battery to supply to the motor at that duty cycle, which controls how fast the motor spins. The encoder reports how far the shaft shas turned, which allows for the microcontroller to loop back into the system to ensure that each motor is doing what it is commanded to do and is correct in real time. Instead of designing our own driver circuit, we will be using a pre-made motor-driver board. These boards are already built and tested, which saves design time, reduces the risk of a power circuit failure, and lets us replace a damaged driver quickly during the competition.
 
@@ -942,27 +942,46 @@ Verification of these safety requirements will be performed during actuator subs
 
 ### Obstacle & Boundary Detection
 
-The mechanical team proposes that the robot shall use mecanum wheels to drive around a 4 ft × 8 ft track that has a black floor and a white center line [2]. Along the straightaways, the center line divides the track into an inner lane and an outer lane. Three soft toy cars [38] are randomly placed in quadrants at the ends of the center rail, and each one can end up in either lane [2]. To get around an obstacle, the robot strafes sideways into the open lane, drives past it, and then moves back to the center line. A lap with no contact earns 15 points for avoiding the gray walls and another 25 points for avoiding the obstacles [2].
+The mechanical team proposes that the robot shall use mecanum wheels to drive around a 4 ft × 8 ft track that has a black floor and a white center line [2]. Along the straightaways, the center line divides the track into an inner lane and an outer lane. Three soft toy cars [38] are randomly placed in quadrants at the ends of the center rail, and each one can end up in either lane [2]. To get around an obstacle, the robot strafes sideways into the open lane, drives past it, and then moves back to the center line. A lap with no contact earns 15 points for avoiding the gray walls and another 25 points for avoiding the obstacles [2], so obstacle and wall avoidance is worth up to 120 points over three laps.
 
-The sensors need to keep the robot on the center line and figure out which lane is blocked before the robot gets to a quadrant. They also need to keep the robot off the gray walls while it changes lanes. The center line works as the main point of reference. Odometry error builds up the farther the robot travels [39], although it is possible the error stays small enough over one lane change that it is not a concern. If it does become a problem, the odometry can be reset each time the line is found again, or the AprilTag can be used as a second reference point. The sensors are split into three groups below: line sensing, odometry, and obstacle/wall ranging.
+The sensors need to keep the robot on the center line and figure out which lane is blocked before the robot gets to a quadrant. They also need to keep the robot off the gray walls while it changes lanes. The center line is the main point of reference. Odometry error builds up the farther the robot travels [39], so the odometry is reset to the line sensor's reading every time the line is detected, and the side-facing ranging sensors provide a second lateral reference during the lane change. The sensors are split into three groups below: line sensing, odometry and localization, and obstacle/wall ranging. A final subsection describes how their readings are combined into one position estimate.
+
+Each sensor decision was made in two steps. Options were first checked against pass/fail requirements, such as contactless sensing and Class 1 lasers only. The remaining options were then scored in a weighted matrix whose criteria come from the specifications of that group (LS-, OD-, and RG- numbers below). Scores use a 1 to 5 scale, and weights reflect the points at stake.
 
 #### Line Sensing
 
-The line sensor looks for the white center line [2] and reports how far left or right of it the robot is. As long as the line is visible, it is clear that the robot is centered. This sensor is used for steering and for resetting odometry. It also confirms when the robot is back on the center after a lane change.
+The line sensor looks for the white center line [2] and reports how far left or right of it the robot is. As long as the line is visible, the controller knows the robot's lateral offset. This sensor is used for steering, for resetting odometry, and for confirming that the robot is back on the center line after a lane change.
 
 ###### Options Considered
 
-Discrete reflectance sensors. A pair of infrared emitter/detector sensors can tell whether the robot is over the line or not, but not how far off it is. With that information, the robot would have to zig-zag along the edge of the line.
+Discrete reflectance sensors. A pair of infrared emitter/detector sensors can tell whether the robot is over the line or not, but not how far off it is. With only that information, the robot would have to zig-zag along the edge of the line.
 
-Reflectance sensor array. A row of emitter/detector pairs reads the floor at several points across the width of the robot. From those readings, the controller can tell where the line is under the robot instead of just detecting it is there. For example, the Pololu QTR-MD-08RC fits eight sensors on a 61 mm board [40].
+Single reflectance sensor array. A row of emitter/detector pairs reads the floor at several points across the width of the robot. From those readings, the controller can tell where the line is under the robot instead of only detecting that it is there. For example, the Pololu QTR-MD-08RC fits eight sensors on a 61 mm board [40].
 
-Color sensor. A single-point color sensor can tell the white line apart from the black floor, not how far away the robot is from the center line.
+Front and rear reflectance arrays. A second array at the rear lets the controller measure the robot's angle relative to the line. The odometry already provides heading (see Odometry and Localization), so the rear array would duplicate that measurement.
 
-Reusing the camera. The vision subsystem’s camera points forward so it can read the AprilTag and see the start flag. Turning it toward the floor would prevent it from doing either job.
+Edge-mounted reflectance arrays. Additional arrays near each side of the chassis keep the line in view while the robot strafes around an obstacle, giving an absolute lateral reference during the lane change. The trade-offs are additional GPIO pins, mounting space near the wheels, and more sensor processing for the master controller.
+
+Color sensor. A single-point color sensor can tell the white line apart from the black floor, but not how far the robot is from the center line.
+
+Reusing the camera. The vision subsystem's camera points forward so it can read the AprilTag and see the start flag. Turning it toward the floor would prevent it from doing either job.
+
+###### Line Sensing Decision Matrix
+
+Discrete sensors and the color sensor fail LS-2 because they cannot report an offset, and the camera is already allocated to vision tasks. The remaining configurations were scored:
+
+| Criterion (weight) | Tied spec | Front array only | Front + rear arrays | Front + edge arrays |
+| --- | --- | :-: | :-: | :-: |
+| Lateral reference during lane change (35%) | OD-2 | 2 | 2 | 5 |
+| Offset resolution for steering (25%) | LS-2 | 5 | 5 | 5 |
+| GPIO and integration load (20%) | Interfaces | 5 | 3 | 2 |
+| Mounting space near wheels (10%) | LS-4 | 5 | 3 | 2 |
+| Cost (10%) | Budget | 5 | 4 | 3 |
+| **Weighted total** | | **3.95** | **3.25** | **3.90** |
 
 ###### Selection
 
-One reflectance sensor array will be mounted at the front of the chassis, a few millimeters off the floor. It continuously tracks the offset of steering with no image processing needed and costs less than $10 [40]. Adding a second array at the rear would let the controller measure the robot’s angle relative to the line, but that decision will come from prototyping.
+The front array only and the front + edge configurations score within 2% of each other, so they are treated as a tie. The tie-breaker is integration risk: one QTR-MD-08RC array will be mounted at the front of the chassis, a few millimeters off the floor, where it tracks the robot's offset from the line with no image processing. Edge arrays, which were suggested in GTA feedback on the midterm design, will be added if testing shows lateral error exceeding OD-2 over a lane change. The rear array is rejected because heading is already measured by the odometry.
 
 <img width="494" height="374" alt="image" src="https://github.com/user-attachments/assets/853c239a-feaf-425d-9573-6e335a918678" />
 
@@ -974,90 +993,149 @@ Line Sensor Interfaces
 
 | Signal | Type | Direction | Protocol | Data |
 | --- | --- | --- | --- | --- |
-| Sensor outputs (×8) | Analog or digital | Sensor to master controller | ADC or GPIO | Reflectance at each sensor |
+| Sensor outputs (×8) | Digital | Sensor to master controller | GPIO (RC discharge timing) | Reflectance at each sensor |
 | Emitter control | Digital | Master controller to sensor | GPIO | Emitters on/off |
-| Power | Power | Power subsystem to sensor | 3.3 V or 5 V | Supply |
+| Power | Power | Power subsystem to sensor | 3.3 V | Supply |
 
 ###### Specifications
 
 The line sensor shall:
 
-Detect the center line at every point on the course where the line is present.
+LS-1: Detect the center line at every point on the course where the line is present.
 
-Report the line’s offset from the robot’s centerline to the master controller.
+LS-2: Report the line's offset from the robot's centerline to the master controller.
 
-Be calibrated for the venue lighting before each match.
+LS-3: Be calibrated for the venue lighting before each match.
 
-Be mounted within its rated sensing height above the floor, with the mount designed together with the mechanical team.
+LS-4: Be mounted within its rated sensing height above the floor, with the mount designed together with the mechanical team.
 
-#### Odometry
+#### Odometry and Localization
 
-The odometry sensor keeps track of where the robot is and which way it is facing between line references. Once the robot strafes off the line to get around an obstacle, there is nothing external to reference until it finds the line again, so the odometry is used to guide it back.
+The odometry keeps track of where the robot is and which way it is facing between line references. Once the robot strafes off the line to get around an obstacle, the line is no longer under the front array, so the odometry guides the robot back to it.
 
 ###### Options Considered
 
-Drive-wheel encoders. The drive motors already have encoders for speed control. The issue is that they measure how the wheels turn and do not account for wheel slippage. Mecanum rollers are designed to slip whenever the robot strafes, so these encoders will only be used for speed control.
+Drive-wheel encoders. The drive motors already have encoders for speed control. They measure how the wheels turn and do not account for slip. Mecanum rollers slip whenever the robot strafes, so these encoders will only be used for speed control.
 
-Dead wheels with encoders and an IMU. Dead wheels are small unpowered wheels spring-loaded against the floor with an encoder on each axle. Since they are not driving the robot, they roll along with the robot’s motion. The downside is that they still need a separate heading source like an IMU, and designing the spring-loaded pods is its own mechanical project.
+Two dead wheels with an IMU. Dead wheels are small unpowered wheels spring-loaded against the floor with an encoder on each axle. Because they are not driving the robot, they roll along with its actual motion. One wheel rolls forward and one rolls sideways, and an IMU provides heading. Heading depends entirely on the IMU's gyroscope, which drifts over time.
 
-Optical (mouse) sensors. An optical sensor takes images of the floor and works out how far the robot has moved, with no moving parts needed. However, it only works within a narrow height range, and accuracy depends on the floor surface.
+Three dead wheels. Two parallel wheels, offset to the left and right of the robot's center, roll forward, and a third rolls sideways. The difference between the two forward wheels gives heading directly, so no separate heading sensor is required. This layout was recommended by the mechanical team. It requires a third pod and encoder, and its heading accuracy depends on wheel calibration, since small differences in wheel diameter or spacing accumulate as heading error over distance [39]. An IMU can be added as a second heading source that does not depend on wheel contact.
+
+Optical (mouse) sensors. An optical sensor takes images of the floor and works out how far the robot has moved, with no moving parts. However, it only works within a narrow height range, and accuracy depends on the floor surface.
 
 Integrated optical odometry module. The SparkFun Optical Tracking Odometry Sensor (OTOS) puts an optical sensor and an IMU on a single 1 in × 1 in board and reports position and heading directly. SparkFun rates it at 3-5% error out of the box and under 1% after calibration [41].
 
+SLAM (Simultaneous Localization and Mapping). SLAM builds a map of an unknown environment while tracking the robot's position within it [49]. The course layout is fixed and known in advance [2], so there is no map to build, and SLAM would require the single-board computer topology the team already rejected.
+
+###### Odometry Decision Matrix
+
+SLAM is rejected by the selected controller topology, and drive-wheel encoders fail OD-2 during strafing. The remaining options were scored:
+
+| Criterion (weight) | Tied spec | Two dead wheels + IMU | Three dead wheels | Three dead wheels + IMU | OTOS |
+| --- | --- | :-: | :-: | :-: | :-: |
+| Slip immunity and position accuracy (30%) | OD-2 | 4 | 5 | 5 | 3 |
+| Heading accuracy (20%) | OD-6 | 3 | 4 | 5 | 4 |
+| Mechanical integration (20%) | OD-5 | 4 | 3 | 3 | 5 |
+| Electrical and firmware integration (15%) | Interfaces | 4 | 4 | 3 | 5 |
+| Cost (15%) | Budget | 4 | 4 | 4 | 3 |
+| **Weighted total** | | **3.80** | **4.10** | **4.15** | **3.90** |
+
 ###### Selection
 
-Dead wheels will be used for odometry. Two small unpowered omni wheels, one rolling forward and one rolling sideways, will be spring-loaded against the floor with an AS5600 magnetic encoder on each axle. A BNO085 IMU will provide the heading. The dead wheels are not driven, so they keep following the robot’s motion even when the mecanum rollers slip during a lane change. The spring-loaded pods will be designed together with the mechanical team. The SparkFun OTOS is kept as an alternative in case the pods do not fit within the size limit or do not track reliably in testing.
+Three dead wheels will be used for odometry. Two unpowered omni wheels rolling forward will be mounted as far apart laterally as the chassis allows, and a third wheel rolling sideways will be mounted as close as possible to the robot's center of rotation, as recommended in GTA feedback. Each axle carries an AS5600 magnetic encoder, and heading is computed from the two forward wheels. Three dead wheels with and without the IMU score within 2% of each other, so they are treated as a tie, broken by integration simplicity: the robot will run on wheel heading alone, with one less device on the I2C bus. The BNO085 IMU, already procured, will be added as a second heading source if testing shows heading error exceeding OD-6. The pods will be designed together with the mechanical team. The SparkFun OTOS is the fallback if the pods do not fit within the starting volume or do not meet OD-2 in testing.
+
+The odometry model for each update is:
+
+- Forward travel: Δx = (ΔR + ΔL) / 2
+- Heading change: Δθ = (ΔR − ΔL) / W
+- Sideways travel: Δy = ΔS − d_S · Δθ
+
+where ΔR and ΔL are the distances rolled by the right and left forward wheels, W is the spacing between them, ΔS is the distance rolled by the lateral wheel, and d_S is the lateral wheel's distance from the center of rotation. The d_S · Δθ term removes the rolling caused by rotation rather than translation, and it shrinks as the lateral wheel is mounted closer to the center of rotation. A wider spacing W reduces heading error for the same encoder resolution. The displacement is then rotated from the robot's frame into the track's frame using the current heading and added to the position estimate.
+
+The AS5600 reports an absolute angle (4096 counts per revolution), so the change between samples is computed as ((new − old + 2048) mod 4096) − 2048. This is valid only if each wheel turns less than half a revolution between samples, which sets the minimum sample rate in OD-3. For example, a 35 mm dead wheel at 1 m/s requires at least 18 samples per second.
 
 <img width="258" height="316" alt="image" src="https://github.com/user-attachments/assets/f47f49cd-02e4-4276-8e73-83b02437f3b0" />
 <img width="546" height="320" alt="image" src="https://github.com/user-attachments/assets/3083161f-b376-49ce-97bc-3cc31c528897" />
 
-AS5600 Magnetic Encoder and BNO085 IMU
+AS5600 Magnetic Encoder and BNO085 IMU (optional)
 
 ###### Interfaces
+
+The three AS5600 encoders share a fixed I2C address, so they are connected through an I2C multiplexer. The odometry sensors use a separate I2C bus from the ranging sensors so that ranging traffic does not delay odometry updates.
 
 Odometry Sensor Interfaces
 
 | Signal | Type | Direction | Protocol | Data |
 | --- | --- | --- | --- | --- |
-| Wheel encoders (AS5600 ×2) | Serial | Bidirectional | I2C through a multiplexer | Wheel angle out |
-| Heading (BNO085 IMU) | Serial | Bidirectional | I2C | Heading out |
+| Wheel encoders (AS5600 ×3) | Serial | Bidirectional | I2C bus 2, through a multiplexer | Wheel angle out |
+| Heading (BNO085 IMU, optional) | Serial | Bidirectional | I2C bus 2 | Heading out |
 | Power | Power | Power subsystem to sensors | 3.3 V | Supply |
 
 ###### Specifications
 
 The odometry system shall:
 
-Measure forward travel, sideways travel, and heading.
+OD-1: Measure forward travel, sideways travel, and heading.
 
-Estimate position within ±1 cm over the length of a lane change.
+OD-2: Estimate lateral position within ±1 cm over the length of a lane change, so that position uncertainty stays small relative to the clearance between the robot and an obstacle. Heading error is the largest contributor: a 1° heading error over a 30 cm lane change produces about 5 mm of lateral error.
 
-Track correctly at the robot’s maximum speed.
+OD-3: Sample each encoder at a rate f_s ≥ 2·v_max / (π·d_w), where v_max is the robot's maximum speed and d_w is the dead-wheel diameter.
 
-Be reset to the line sensor’s reading whenever the line is detected.
+OD-4: Be reset to the line sensor's reading whenever the line is detected.
 
-Keep the dead wheels in contact with the floor during forward driving and strafing.
+OD-5: Keep all three dead wheels in contact with the floor during forward driving and strafing.
+
+OD-6: Keep heading error within 1° between line references.
 
 #### Obstacle and Wall Ranging
 
-The ranging sensors look ahead at each obstacle quadrant and report which lane is blocked, if either. They also measure how far the robot is from the gray walls on each side. During a lane change, that side distance tells the master controller how far the robot has strafed and keeps it from hitting a wall. The forward sensor must spot an obstacle early enough so that the robot can finish moving over before it gets there. The exact distance depends on how fast the robot ends up being and will be worked out during detailed design.
+The ranging sensors look ahead at each obstacle quadrant and report which lane is blocked, if either. They also measure how far the robot is from the gray walls on each side. During a lane change, that side distance tells the master controller how far the robot has strafed and keeps it from hitting a wall. While the robot passes an obstacle, the side sensor facing the center line also sees the obstacle beside the robot, and its reading returning to open space confirms that the obstacle has been cleared.
 
 ###### Options Considered
 
-Limit switches. A limit switch only triggers on contact. Touching obstacles/walls loses points and defeats the purpose of avoidance.
+Limit switches. A limit switch only triggers on contact. Touching obstacles or walls loses points and defeats the purpose of avoidance.
 
-Ultrasonic sensors. An ultrasonic sensor such as the HC-SR04 sends out a sound pulse and times the echo, using a 15° beam [42]. Since the obstacles are soft toy cars [38], they likely return a weaker echo than a hard surface would. For this reason, ultrasonic sensors are a poor choice. The beam is also wide too wide to  reliably tell which lane is blocked.
+Ultrasonic sensors. An ultrasonic sensor such as the HC-SR04 sends out a sound pulse and times the echo, using a 15° beam [42]. Since the obstacles are soft toy cars [38], they likely return a weaker echo than a hard surface would. The beam is also too wide to reliably tell which lane is blocked.
 
-Single-point laser time-of-flight (ToF) sensors. A time-of-flight (ToF) sensor times how long a pulse of infrared laser light takes to bounce back. The ST VL53L0X can measure up to 2 m with a narrow beam and uses an eye-safe Class 1 laser [43]. The narrow beam makes it a good fit for measuring the distance to a side wall.
+Single-point laser time-of-flight (ToF) sensors. A ToF sensor times how long a pulse of infrared laser light takes to bounce back. The ST VL53L0X can measure up to 2 m with a narrow beam and uses an eye-safe Class 1 laser [43]. The narrow beam makes it a good fit for measuring the distance to a side wall. The ST VL6180X is a similar sensor with a much shorter rated range.
 
-Multizone ToF sensors. The ST VL53L7CX breaks its view into an 8 × 8 grid and measures the distance in each zone, covering a 90° diagonal field of view out to 3.5 m [44]. Because of this, the controller can see which part of the track ahead is blocked, and from that, which lane.
+Multizone ToF sensors. The ST VL53L7CX breaks its view into an 8 × 8 grid and measures the distance in each zone, covering a 90° diagonal field of view out to 3.5 m [44]. The controller can see which part of the track ahead is blocked, and from that, which lane.
 
-360° scanning LiDAR. A LiDAR like the SLAMTEC RPLIDAR C1 spins a laser sensor to measure distance all the way around the robot [45]. In theory, one sensor could handle both the walls and the obstacles. In practice, it only scans in a flat plane which likely passes over the low obstacles. It would also need a clear view in every direction, and it produces far more data than any of the other options.
+360° scanning LiDAR. A LiDAR like the SLAMTEC RPLIDAR C1 spins a laser sensor to measure distance all the way around the robot [45]. In theory, one sensor could handle both the walls and the obstacles. In practice, it only scans in a flat plane, which likely passes over the low obstacles. It would also need a clear view in every direction and produces far more data than the other options.
 
 Reusing the camera. The camera could pick out obstacles by color, but it is already busy with the AprilTag and the start flag, and it cannot measure distance directly.
 
+###### Ranging Decision Matrices
+
+Limit switches fail the contactless requirement, the RPLIDAR fails RG-4 because its scan plane passes over the obstacles, and the camera is already allocated to vision tasks. The remaining options were scored separately for forward and side ranging, because the two answer different specifications. The forward weights reflect the 75 obstacle points at stake over three laps, which can be lost either by misidentifying the blocked lane or by missing a soft target.
+
+Forward obstacle ranging:
+
+| Criterion (weight) | Tied spec | VL53L7CX multizone | 2× VL53L0X, one per lane | HC-SR04 ultrasonic |
+| --- | --- | :-: | :-: | :-: |
+| Lane discrimination (30%) | RG-2 | 5 | 3 | 1 |
+| Soft-target detection (25%) | RG-1 | 4 | 4 | 2 |
+| Range margin over d_req (15%) | RG-1 | 4 | 3 | 4 |
+| Integration effort (15%) | Interfaces | 3 | 4 | 4 |
+| Cost (10%) | Budget | 3 | 5 | 5 |
+| Size and mounting (5%) | RG-4 | 4 | 4 | 3 |
+| **Weighted total** | | **4.05** | **3.65** | **2.65** |
+
+The result depends on the weight given to lane discrimination. Reducing it to 15% and raising cost to 25% would favor the VL53L0X pair (3.95 to 3.75), so the pair is kept as the fallback.
+
+Side wall ranging:
+
+| Criterion (weight) | Tied spec | VL53L0X | VL6180X | HC-SR04 ultrasonic |
+| --- | --- | :-: | :-: | :-: |
+| Range covers wall distance during lane change (35%) | RG-3 | 5 | 2 | 5 |
+| Beam width and precision (25%) | RG-3 | 4 | 4 | 2 |
+| Integration effort (20%) | Interfaces | 4 | 4 | 3 |
+| Cost (20%) | Budget | 4 | 4 | 5 |
+| **Weighted total** | | **4.35** | **3.30** | **3.85** |
+
 ###### Selection
 
-One VL53L7CX multizone ToF sensor will face forward to watch for obstacles, and two VL53L0X single-point ToF sensors will face sideways to watch the walls. This matches the object detection laser sensor shown in the block diagram, and all three sensors share one I2C bus. If the ToF setup turns out to be unreliable in testing, the 360° LiDAR is the backup option.
+One VL53L7CX multizone ToF sensor will face forward to watch for obstacles, and two VL53L0X single-point ToF sensors will face sideways to watch the walls. This matches the object detection laser sensor shown in the block diagram. If the VL53L7CX cannot reliably identify the blocked lane at d_req in bench testing with the toy-car obstacles, two VL53L0X sensors angled toward each lane will replace it.
 
 <img width="467" height="351" alt="image" src="https://github.com/user-attachments/assets/ce49134b-de81-47e4-aca6-8d27e1de6e1a" />
 <img width="299" height="350" alt="image" src="https://github.com/user-attachments/assets/15341ce3-548c-4de4-b376-55d170ee576d" />
@@ -1066,28 +1144,62 @@ VL53L7CX (left) and VL53L0X (right) ToF Sensors
 
 ###### Interfaces
 
+All three ranging sensors share a default I2C address, so each one's enable pin is used to assign a unique address at startup.
+
 Ranging Sensor Interfaces
 
 | Signal | Type | Direction | Protocol | Data |
 | --- | --- | --- | --- | --- |
-| Forward ranging (VL53L7CX) | Serial | Bidirectional | I2C | Configuration in, zone distances out |
-| Wall ranging (VL53L0X ×2) | Serial | Bidirectional | I2C | Configuration in, wall distance out |
-| Sensor enable (×3) | Digital | Master controller to sensors | GPIO | Sets each sensor’s address at startup |
+| Forward ranging (VL53L7CX) | Serial | Bidirectional | I2C bus 1 | Configuration in, zone distances out |
+| Wall ranging (VL53L0X ×2) | Serial | Bidirectional | I2C bus 1 | Configuration in, wall distance out |
+| Sensor enable (×3) | Digital | Master controller to sensors | GPIO | Sets each sensor's address at startup |
 | Power | Power | Power subsystem to sensors | 3.3 V | Supply |
 
 ###### Specifications
 
 The ranging sensors shall:
 
-Detect a toy-car obstacle in either lane far enough ahead for the robot to complete a lane change before reaching it.
+RG-1: Detect a toy-car obstacle in either lane at a distance of at least d_req = v_max · (t_lc + t_s) + d_m, where t_lc is the lane-change time, t_s is one sensor update period, and d_m is a safety margin.
 
-Report whether the inner lane, the outer lane, or neither is blocked.
+RG-2: Report whether the inner lane, the outer lane, or neither is blocked.
 
-Measure the distance to each side wall during a lane change.
+RG-3: Measure the distance to each side wall during a lane change.
 
-Be mounted at a height where they can see the obstacles, the side rails, and the lower center rail.
+RG-4: Be mounted at a height where they can see the obstacles, the side rails, and the lower center rail.
 
-Use only Class 1 infrared lasers, consistent with the ban on visible-light lasers [1].
+RG-5: Use only Class 1 infrared lasers, consistent with the ban on visible-light lasers [1].
+
+#### Position Estimation
+
+Several sensors measure the same quantities in different ways, and their readings must be combined into one estimate of the robot's position.
+
+| Quantity | Relative source (drifts) | Absolute sources (intermittent) |
+| --- | --- | --- |
+| Lateral position | Lateral dead wheel | Line array (when the line is under it); side ToF wall distance (during lane changes) |
+| Forward position | Forward dead wheels | AprilTag (at the pit stop) |
+| Heading | Forward dead-wheel difference; BNO085 (if added) | Line angle (when the line is visible) |
+
+###### Options Considered
+
+Dead reckoning with resets. The estimate is overwritten whenever an absolute reference is available. This is simple, but the estimate jumps at each reset and the side wall distance goes unused.
+
+Complementary filter. Each update blends the odometry prediction with the absolute reference: x̂ = α·(x̂ + Δodometry) + (1 − α)·z_reference. Odometry provides smooth short-term motion, the reference removes long-term drift, and the filter has one tuning constant.
+
+Kalman filter (EKF). Each source is weighted by its measured noise, and the filter handles a reference dropping out naturally. It gives the best accuracy but requires characterizing each sensor's noise and tuning several parameters.
+
+###### Position Estimation Decision Matrix
+
+| Criterion (weight) | Tied spec | Resets only | Complementary filter | EKF |
+| --- | --- | :-: | :-: | :-: |
+| Accuracy vs. OD-2 (35%) | OD-2 | 3 | 4 | 5 |
+| Implementation risk (30%) | Team experience | 5 | 4 | 2 |
+| Robustness to reference dropout (20%) | OD-2 | 2 | 4 | 5 |
+| Tuning effort (15%) | Schedule | 5 | 4 | 2 |
+| **Weighted total** | | **3.70** | **4.00** | **3.65** |
+
+###### Selection
+
+A complementary filter will combine the odometry with the line and side-wall references. If the BNO085 is added, the same filter will blend its heading with the wheel heading. Dead reckoning with resets will be used first during bring-up. If testing shows lateral error exceeding OD-2 during lane changes, the filter will be upgraded to an EKF, with guidance from faculty experienced in sensor fusion, as suggested in GTA feedback.
 
 #### Sensor Comparison
 
@@ -1097,19 +1209,28 @@ Sensor Option Comparison
 
 | Group | Option | Limitation | Decision |
 | --- | --- | --- | --- |
-| Line | Reflectance array | Must sit close to the floor | Selected |
+| Line | Front reflectance array | Must sit close to the floor | Selected |
+| Line | Edge-mounted reflectance arrays | More GPIO; mounting near wheels | Alternative |
+| Line | Front and rear arrays | Duplicates odometry heading | Rejected |
 | Line | Discrete reflectance sensors | No offset measurement | Rejected |
 | Line | Color sensor | No offset measurement | Rejected |
 | Line | Forward camera | Needed for AprilTags and flag | Rejected |
-| Odometry | Dead wheels with IMU | Spring-loaded pods to design | Selected |
+| Odometry | Three dead wheels | Third pod and encoder; multiplexer required; heading depends on wheel calibration | Selected |
+| Odometry | Three dead wheels with IMU | Extra I2C device | Optional addition (OD-6) |
 | Odometry | Optical module with IMU (OTOS) | Untested on plywood, height-sensitive | Alternative |
+| Odometry | Two dead wheels with IMU | Heading depends on gyro alone | Rejected |
 | Odometry | Optical mouse sensors | Narrow height band | Rejected |
 | Odometry | Drive-wheel encoders | Mecanum wheels slip when strafing | Speed control only |
-| Ranging | Multizone ToF (VL53L7CX) | Forward view only | Selected |
-| Ranging | Single-point ToF (VL53L0X) | One direction per sensor | Selected |
-| Ranging | 360° LiDAR (RPLIDAR C1) | Single scan plane, mounting, data load | Alternative |
+| Odometry | SLAM | Course layout already known; requires rejected single-board computer topology | Rejected |
+| Forward ranging | Multizone ToF (VL53L7CX) | Wide field of view may include walls | Selected |
+| Forward ranging | 2× single-point ToF (VL53L0X) | One point per lane | Alternative |
+| Side ranging | Single-point ToF (VL53L0X) | One direction per sensor | Selected |
+| Side ranging | Short-range ToF (VL6180X) | Range too short for wall distance | Rejected |
 | Ranging | Ultrasonic (HC-SR04) | Soft targets, wide beam | Rejected |
+| Ranging | 360° LiDAR (RPLIDAR C1) | Scan plane passes over obstacles | Rejected |
 | Ranging | Limit switch | Triggers only on contact | Rejected |
+| Estimation | Complementary filter | One tuning constant | Selected |
+| Estimation | EKF | Noise characterization and tuning | Alternative |
 
 #### Sensing Flowchart
 
@@ -1500,6 +1621,8 @@ Each team member will still be responsible for managing a subsystem and its deta
 [47] “4WD Omnidirectional Mecanum Robot Car With Claw AI Visual Recognition Tracking for Arduino DIY Kit for UNO Programmable Robot,” Bestdealplus.com, 2026.  (accessed Oct. 23, 2026).
 
 [48] ISO, ISO 12100:2010, *Safety of machinery — General principles for design — Risk assessment and risk reduction*. Geneva, Switzerland: International Organization for Standardization, 2010.
+
+[49] H. Durrant-Whyte and T. Bailey, "Simultaneous localization and mapping: Part I," IEEE Robot. Autom. Mag., vol. 13, no. 2, pp. 99–110, Jun. 2006, doi: 10.1109/MRA.2006.1638022.
 
 ## Statement of Contributions
 
