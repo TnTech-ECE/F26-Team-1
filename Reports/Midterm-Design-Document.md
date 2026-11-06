@@ -622,7 +622,7 @@ For the finalized design, we will be incorporating 1.25mm JST connectors for all
 
 ### Master Control
 
-The master control system can be broken down into three major components, or two depending on how the camera subsystem is committed. The two main core jobs will be collecting all the data from sensors for different tasks as well as sending out signals to actuators for different tasks. Additionally, based on how the camera subsystem is designed, the master controller also must do the computational of the Image Processing and AprilTags Detection. The robot shall also use a combination of sensors that will allow the robot to perceive its location on the game board and be able to identify objects on the board. The robot should utilize a camera that can perceive both color and April Tags detection to score points.
+The master control system can be broken down into three major components, or two depending on how the camera subsystem is implemented. The two main core jobs will be collecting all the data from sensors for different tasks as well as sending out signals to actuators for different tasks. Additionally, based on how the camera subsystem is designed, the master controller also must do the computational of the Image Processing and AprilTags Detection. The robot shall also use a combination of sensors that will allow the robot to perceive its location on the game board and be able to identify objects on the board. The robot should utilize a camera that can perceive both color and April Tags detection to score points.
 
 Despite its name, ROS (Robot Operating System) isn't an operating system. It's a middleware framework that runs on top of Linux, providing drivers, communication tools, and shared infrastructure that make robotics software reusable across platforms. Before ROS, every robot had its own sensors, motors, and protocols, so developers had to rewrite code for each new machine, and a navigation algorithm built for one robot rarely worked on another [13].
 
@@ -681,13 +681,13 @@ STM32 Board NUCLEO
 
 <img width="398" height="598" alt="image" src="https://github.com/user-attachments/assets/c7b91272-feb1-4360-b65f-30404ff6b52a" />
 
-STM32 Nucleo-H743ZI2 Development Board
+STM32 Nucleo-H753ZI2 Development Board
 
 STM32 Nucleo boards are a good fit for RTOS/ Interrupt-based projects: they're affordable, include an ST-LINK debugger/programmer, and offer expansion headers, which makes prototyping and debugging convenient. STM32CubeIDE also makes it easier to configure pins and create RTOS tasks, NVIC Interrupt since it can generate the FreeRTOS (CMSIS-RTOS) scaffolding automatically [21] and generate code for Interrupt task.
 
 This development board exhibits varying power consumption depending on whether the entire board or only the microcontroller (MCU) core is measured. When the entire board is powered via USB or an external supply, typical current consumption ranges from 150 mA to over 250 mA (approximately 0.5 W to 0.8 W at 5V) due to auxiliary components like the integrated ST-LINK debugger, status LEDs, and the onboard Ethernet transceiver. For the isolated STM32H743ZI MCU core, power efficiency scales at roughly 275 µA/MHz under typical running conditions; when operating at its peak clock speed of 400 MHz to 480 MHz, the core itself draws between 110 mA and 130 mA [29].
 
-The main drawbacks of this board are its lack of camera and USB host support and the steep learning curve it presents for the team. The board has no dedicated CSI or DCMI camera connector and no USB host port, so connecting a CSI or USB camera would require extra hardware, such as an adapter board or external module, or a switch to a different platform, which limits its suitability for vision-based features. In addition, development on this MCU demands a significant amount of low-level knowledge, including clock tree configuration (RCC) and the PLL and prescaler calculations behind it, pin assignment and alternate-function mapping, NVIC interrupt priority setup, and timer configuration for PWM, capture, and similar modes. These tasks are error-prone, and a small mistake such as a wrong clock divider or interrupt priority can cause subtle, hard-to-debug problems, which increases onboarding time and project risk, especially for team members new to embedded systems. These issues can be reduced by using STM32CubeMX or CubeIDE to generate the configuration code, relying on HAL or LL drivers, and preparing short internal guides and templates, while camera needs could be met with a board that has a built-in camera interface or a companion module such as an ESP32-CAM or Raspberry Pi.
+The main drawbacks of this board are its lack of camera and USB host support and the steep learning curve it presents for the team. The board has no dedicated CSI or DCMI camera connector and no USB host port, so connecting a CSI or USB camera would require extra hardware, such as an adapter board or external module, or a switch to a different platform, which limits its suitability for vision-based features. In addition, development on this MCU demands a significant amount of low-level knowledge, including clock tree configuration (RCC) and the PLL and prescaler calculations behind it, pin assignment and alternate-function mapping, NVIC interrupt priority setup, and timer configuration for PWM, capture, and similar modes. These tasks are error-prone, and a small mistake such as a wrong clock divider or interrupt priority can cause subtle, hard-to-debug problems, which increases onboarding time and project risk, especially for team members new to embedded systems. A NUCLEO-N657X0-Q was considered as an alternative developement board due to it's built-in support for a CSI camera, however using an external camera module to process image data will allow for higher-level languages to be used for development. Camera needs could be met with a board that has a built-in camera interface or a companion module such as an OpenMV camera or Raspberry Pi.
 
 Teensy Development Board
 
@@ -729,7 +729,7 @@ Price Comparison
 | Board | Processor | Clock Speed | Approximate Price | Camera Compatible |
 | --- | --- | --- | --- | --- |
 | NVIDIA Jetson Nano (4GB Dev Kit) | Quad-core ARM Cortex-A57 + 128-core Maxwell GPU | 1.43GHz | $99 Minimum | USB Camera, CSI Camera |
-| STM32 Nucleo-H743ZI2 | Single-core ARM Cortex-M7 (STM32H743ZI) | 480MHz | $40 | Camera over UART or I2C. |
+| STM32 Nucleo-H753ZI2 | Single-core ARM Cortex-M7 (STM32H753ZI) | 480MHz | $40 | Camera over UART or I2C. |
 | Teensy 4.1 | Single-core ARM Cortex-M7 (NXP iMXRT1062) | 600MHz | $32 | Camera over UART or I2C. |
 | Raspberry Pi 5 | Quad-core ARM Cortex-A76 (Broadcom BCM2712) + VideoCore VII GPU | 2.4GHz | $110 | USB Camera, CSI Camera |
 | Raspberry Pi Pico 2 | Dual-core ARM Cortex-M33 (RP2350) | 150MHz | $18 | Camera over UART or I2C. |
@@ -796,6 +796,10 @@ ROS 2 is designed for systems where perception, localization, and planning must 
 
 Several time-constrained tasks benefit from RTOS. A motor control loop, such as a velocity PID controller, must run at a fixed period of roughly 5 to 10 ms, since mistiming can cause drift or oscillation, and a high-priority task using vTaskDelayUntil() keeps that period deterministic. Distance sensors can take tens of milliseconds per reading, so instead of blocking everything as in a single-loop design, the sensor task can wait on a DMA transfer or semaphore while the control loop keeps running. Obstacle response also depends on low sensing and planner latency, since each lap with contact forfeits 15 points. Finally, the pit stop must last at least 2 seconds to earn the full 15 points (otherwise 10), so a fixed-delay task targeting about 2.3 seconds is a simple, verifiable way to add margin. Given this, a microcontroller board can run RTOS or basic loops with interrupts are adequate for this project.
 
+#### Proposed Solution
+
+The proposed solution is to use the NUCLEO-H753ZI development board. It provides the hardware timers, encoder interfaces, PWM channels, ADCs with DMA, and communication peripherals needed to interface all sensors and actuators on one board. Many team members are familar with the STM32 archtecture, and its on-board ST-LINK debugger addresses the debugging limitation noted for the Teensy 4.1 and Pico 2. The proposed firmware will use an interrupt-driven design with a polled state machine instead of an RTOS. If the number of concurrent tasks grows beyond what a single interrupt-based loop can handle, migrating to FreeRTOS via STM32CubeIDE remains possible on the same hardware. A microcontroller-based master controller was selected over the Jetson Nano and Raspberry Pi 5. As previously mentioned in the Comparative Analysis of Potential Solutions section, a single-board computer running Linux is not necessary for the requirements of this competition. A microcontroller is much more suited to deterministic control and sensor I/O. While the Teensy 4.1 has a faster clock for a lower price, it has no on-board debugger and is limited in number of pins. The Raspberry Pi Pico 2 is the cheapest option but has a 150 MHz clock, less memory, and fewer ADC channels. The Nucleo provides more computing margin, more analog inputs, and more memory for the sensor suite.
+
 ### Motor Control – Ty
 
 For the robot to move consistently and accurately during the competition, we need to design reliable way to control the speed and direction of each motor. We are looking at using 12V brushed DC gearmotors that have built-in encoder. The microcontroller will generate a pulse-width modulation (PWM) signal, and the driver will switch the 12V battery to supply to the motor at that duty cycle, which controls how fast the motor spins. The encoder reports how far the shaft shas turned, which allows for the microcontroller to loop back into the system to ensure that each motor is doing what it is commanded to do and is correct in real time. Instead of designing our own driver circuit, we will be using a pre-made motor-driver board. These boards are already built and tested, which saves design time, reduces the risk of a power circuit failure, and lets us replace a damaged driver quickly during the competition.
@@ -843,15 +847,15 @@ Together, the exponential ramp and PID control give the robot smooth, predictabl
 
 To meet the vision input & processing requirements of the proposed solution, the camera system shall meet the following requirements:
 
-Identify 68x68 mm AprilTags from a distance 2 – 12 inches (estimate based on course dimensions [2])
+* Identify 68x68 mm AprilTags from a distance 2 – 12 inches (estimate based on course dimensions [2])
 
-Identify the lowering of the green start flag
+* Identify the lowering of the green start flag
 
-Identify the location of the blue tire
+* Identify the location of the blue tire
 
 #### Proposed Solutions
 
-###### Single Board Computer (SBC) + CSI Camera
+##### Single Board Computer (SBC) + CSI Camera
 
 This proposed solution uses an SBC running Linux with a CSI-connected camera. The SBC could either act as the main navigation control and interface with a microcontroller to control motors and actuators; or it could act as a dedicated vision processing unit, sending results over UART to the microcontroller-based master controller. Both cases are considered in the previous section on Master Control. This section will only consider the SBC as a vision processing unit. A Raspberry Pi computer and an official CSI Raspberry Pi camera module will be considered for this proposed solution, given their popularity and extensive documentation / community support.
 
@@ -859,16 +863,16 @@ Precedents exist for using a Raspberry Pi 4/5 and CSI camera for AprilTag detect
 
 Running a general-purpose operating system introduces risks that a dedicated vision camera avoids. Longer boot time from an SBC adds to pre-match setup. Abrupt power loss can corrupt the SD card filesystem, which would have to be accounted for in design of emergency stop button. A Raspberry Pi would also require assembling the OS, camera pipeline, libraries, and startup services. Running a general-purpose operating system on an autonomous robot can also be affected by software deployment issues, which may require a learning curve given the team’s inexperience with high-level software development. Using a Raspberry Pi can also cause a delayed response due to image processing. These shortcomings could be justified if the solution required the computing power of an SBC for navigation. Since navigation is handled elsewhere and the SBC would perform only vision tasks, the added integration risk is difficult to justify.
 
-A Raspberry Pi 4B with 4GB of RAM would be sufficient for this approach [7]. To ensure proper lighting, a button lamp should be included in camera subsystem.
+A Raspberry Pi 5 with 4GB of RAM would be sufficient for this approach [7]. To ensure proper lighting, a button lamp should be included in camera subsystem.
 
-| Part | Cost | Link |
+| Part | Cost | Source |
 | --- | --- | --- |
-| Raspberry Pi 4B (4GB RAM) Kit | $169.99 | Amazon |
+| Raspberry Pi 5 (4GB RAM) Kit | $209.99 | Amazon |
 | Raspberry Pi Camera Module 3 Wide | $36.00 | Amazon |
 | Button Lamp | $5.99 | Amazon |
-| ESTIMATED TOTAL COST | $211.98 | $211.98 |
+| ESTIMATED TOTAL COST | $251.90 |
 
-###### OpenMV Camera
+##### OpenMV Camera
 
 This proposed solution uses a dedicated smart vision module that performs image processing on-board and sends the results to the main controller. OpenMV smart camera running MicroPython. It would perform on-board AprilTag decoding and color blob detection for the three tasks. Results go over a UART link to the main controller, which handles motor and actuator control.
 
@@ -878,12 +882,22 @@ The main drawbacks for using an OpenMV camera would be the lack of precedent. An
 
 The OpenMV N6 board would be most suitable for the task, given it’s more powerful processor, swappable camera module, and convenient peripheral access with jumper wire headers [11]. The OpenMV AE6 could be a viable lower-budget choice. While it isn’t as computationally powerful as and lacks swappable camera module, it does include an 8x8 time-of-flight sensor, which could aid in obstacle detection [12]. To ensure proper lighting, a button lamp should be included in camera subsystem.
 
-| Part | Cost | Link |
+| Part | Cost | Source |
 | --- | --- | --- |
 | OpenMV N6 | $195.00 | OpenMV |
 | OpenMV AE3 | $150.00 | OpenMV |
 | Button Lamp | $5.99 | Amazon |
-| ESTIMATED TOTAL COST | $155.99 – $200.99 | $155.99 – $200.99 |
+| ESTIMATED TOTAL COST | $155.99 – $200.99 |
+
+##### Pros & Cons
+| Criterion | Raspberry Pi 5 + CSI Camera | OpenMV Camera (N6 or AE6) |
+| --- | --- | --- |
+| **Pros** | - Established precedent for AprilTag and color detection in autonomous robots<br>- Extensive documentation and community support<br>- Mature libraries (Picamera2, OpenCV)<br>- Flexible choice of official camera modules<br>- Compute headroom, so it could also host navigation control<br>- Direct CSI connection is the best option if a dedicated compute module is the master controller | - Simple integration, since AprilTag and color detection ship in the firmware and IDE<br>- Runs a script from flash, so there is no OS boot delay<br>- No SD card filesystem to corrupt on abrupt power loss, which simplifies emergency stop design<br>- Low power draw (under 0.75 W at 5 V)<br>- Lower software complexity, which suits the team's limited high-level software experience<br>- N6 offers a more powerful processor, swappable lenses, and convenient jumper-wire header access<br>- AE6 includes an 8x8 time-of-flight sensor that could aid obstacle detection<br>- Results are sent to the main controller over UART |
+| **Cons** | - General-purpose OS increases pre-match setup time through longer boot<br>- Abrupt power loss can corrupt the SD card filesystem, which must be handled in the emergency stop design<br>- Requires assembling the OS, camera pipeline, libraries, and startup services<br>- Software deployment issues and a learning curve given the team's inexperience<br>- Image processing can cause delayed response<br>- Extra computing power is unnecessary when navigation is handled elsewhere, so the integration risk is hard to justify | - Less precedent in autonomous competition robots<br>- Less documentation and community support than Raspberry Pi<br>- Lower computing power, so it is not suited to advanced navigation control<br>- Fewer camera options than CSI modules |
+
+#### Chosen Solution
+
+Given that the microcontroller-based master controller toplogy has been selected over the SBC + LLC topology, the OpenMV Camera module has been selected over an SBC + CSI camera. The OpenMV camera performs the required vision tasks on-board using firmware-integrated AprilTag and color detection, then sends results to the master controller over UART. This avoids the added integration risk of an SBC, namely OS boot delay, SD card corruption on abrupt power loss, and a software deployment learning curve. The extra compute of an SBC would go unused, since navigation is not allocated to the vision subsystem.
 
 ### Flag Raising & Tire-Changing Actuators
 
@@ -1342,31 +1356,34 @@ Each built-in mitigation produces evidence that can be checked: the public repos
 
 ### Budget
 
-| Item | Expected Cost per Item | Expected Quantity | Expected Cost |
-|---|---:|---:|---:|
-| **Power System** | | | |
-| Lithium Battery | $50.00 | 1 | $50.00 |
-| Buck Converters (12V to 5V / 12V to 3.3V) | $13.00 | 2 | $26.00 |
-| **Master Controller** | | | |
-| Microcontroller Development Board | $80.00 | 1 | $80.00 |
-| PCB (w/ connectors & standoffs) | $80.00 | 1 | $80.00 |
-| **Camera / Vision Processing** | | | |
-| OpenMV N6 camera | $225.00 | 1 | $225.00 |
-| **Navigation Inputs** | | | |
-| Time-Of-Flight ranging sensor (for boundry detection) | $8.00 | 2 | $16.00 |
-| Matrix Distance Sensor (for obstacle detection) | $30.00 | 1 | $30.00 |
-| Tracking Wheel & Encoder (for odometry) | $80.00 | 2 | $160.00 |
-| QTRX-MD-08RC Reflectance Sensor Array | $18.00 | 1 | $18.00 |
-| **Flag & Tire Actuators** | | | |
-| Servo Motors | $11.67 | 5 | $58.33 |
-| Stepper Motor & Driver | $15.00 | 1 | $15.00 |
-| **Motor Control** | | | |
-| Motor | $15.00 | 4 | $60.00 |
-| Dual H Bridge Motor Driver | $13.00 | 2 | $26.00 |
-| **Miscellaneous** | | | |
-| Switches (emergency stop, start sutton, status LEDs) | $50.00 | 1 | $50.00 |
-| Wiring & integration | $40.00 | 1 | $40.00 |
-| **Estimated Total** | | | **$934.33** |
+# Expected Bill of Materials
+
+| Item | Expected Cost Per Item | Expected Quantity | Expected Cost | Link |
+| --- | ---: | ---: | ---: | --- |
+| 3S Lithium-ion Battery | $68.99 | 1 | $68.99 | [Link](<https://www.amazon.com/dp/B0CP5KYZXY/?coliid=I2F0U5KF6A0YXJ&colid=23D9XR7A5OVNN&psc=1&ref_=list_c_wl_lv_ov_lig_dp_it>) |
+| DC 12V/24V to 5V 15A Step Down Converter | $10.99 | 2 | $21.98 | [Link](<https://www.amazon.com/dp/B09X1ZGR38/?coliid=I2N4TJQCC03CC4&colid=23D9XR7A5OVNN&psc=1&ref_=list_c_wl_lv_ov_lig_dp_it>) |
+| **Master Controller** | | | | |
+| Microcontroller Development Board | $40.81 | 1 | $40.81 | [Link](<https://www.digikey.com/en/products/detail/stmicroelectronics/NUCLEO-H753ZI/21348937?msclkid=8055c840130b15cd06a6a2ae2597b0e8&gclid=8055c840130b15cd06a6a2ae2597b0e8&gclsrc=3p.ds&gad_source=7&gad_campaignid=21987963296>) |
+| PCB (w/ connectors & standoffs) | $80.00 | 1 | $80.00 |  |
+| **Camera / Vision Processing** | | | | |
+| OpenMV N6 camera | $225.00 | 1 | $225.00 | [Link](<https://www.amazon.com/dp/B0H8SSNBYK/?coliid=I864XICTG6T1R&colid=23D9XR7A5OVNN&psc=1&ref_=list_c_wl_lv_ov_lig_dp_it>) |
+| **Navigation Inputs** | | | | |
+| VL6180X TOF Distance Sensor Module | $9.99 | 2 | $19.98 | [Link](<https://www.amazon.com/dp/B0FKS84DJP/?coliid=I8K0V9OXX6862&colid=23D9XR7A5OVNN&psc=1&ref_=list_c_wl_lv_ov_lig_dp_it>) |
+| DFROBOT 8x8 Matrix Sensor | $22.00 | 1 | $22.00 | [Link](<https://www.amazon.com/dp/B0FS77NZRC/?coliid=IR5ZYA6FCPMWP&colid=23D9XR7A5OVNN&psc=1&ref_=list_c_wl_lv_ov_lig_dp_it>) |
+| AS5600 Magnetic Encoder | $9.99 | 1 | $9.99 | [Link](<https://www.amazon.com/dp/B0CM3C8KFT/?coliid=I194GEWTN6TZPK&colid=23D9XR7A5OVNN&psc=1&ref_=list_c_wl_lv_ov_lig_dp_it>) |
+| BNO080 Nine Axis Sensor Module | $20.49 | 1 | $20.49 | [Link](<https://www.amazon.com/dp/B0CDGZMLPP/?coliid=IHFNUV2UVEAI7&colid=23D9XR7A5OVNN&psc=1&ref_=list_c_wl_lv_ov_lig_dp_it>) |
+| **Flag & Tire Actuators** | | | | |
+| Servo Motors | $18.99 | 4 | $75.96 | [Link](<https://www.amazon.com/dp/B07MFK266B/?coliid=I34JEY8U5JI2Z0&colid=23D9XR7A5OVNN&ref_=list_c_wl_lv_ov_lig_dp_it&th=1>) |
+| DC 12V 550RPM Gear Motor High Torque | $14.99 | 1 | $14.99 | [Link](<https://www.amazon.com/dp/B072R5G5GR/?coliid=I2QVWDF9CQL7A6&colid=23D9XR7A5OVNN&ref_=list_c_wl_lv_ov_lig_dp_it&th=1>) |
+| **Motor Control** | | | | |
+| JGB37 520 DC12V Gear Motor With Encoder | $13.79 | 4 | $55.16 | [Link](<https://www.amazon.com/dp/B0H4FVPXDN/?coliid=I1HR7M7Y5KY96I&colid=23D9XR7A5OVNN&psc=1&ref_=list_c_wl_lv_ov_lig_dp_it>) |
+| Cytron Dual Channel 10A DC Motor Driver | $23.48 | 3 | $70.44 | [Link](<https://www.amazon.com/dp/B07CW34YRB/?coliid=IWW4P5ZHRKDYM&colid=23D9XR7A5OVNN&psc=1&ref_=list_c_wl_lv_ov_lig_dp_it>) |
+| **Miscellaneous** | | | | |
+| Wiring & integration | $40.00 | 1 | $40.00 |  |
+| Jumper Cables | $6.98 | 1 | $6.98 | [Link](<https://www.amazon.com/dp/B01EV70C78/?coliid=IYTOCWHZCEFWV&colid=23D9XR7A5OVNN&ref_=list_c_wl_lv_ov_lig_dp_it&th=1>) |
+| Start Switch | $6.39 | 1 | $6.39 | [Link](<https://www.amazon.com/DaierTek-Listed-Switches-Automotive-KCD1-5Pack/dp/B07S1MV462?crid=2LSV83X8HO8IP&dib=eyJ2IjoiMSJ9.p-nxYeYUIVoEfWAP69LmQLx2KPtjR7Tjo7XlyYHnyLzo2UjyTSmfLl7Mpjwugrn274QUvaEpLEB17lsXtgFEpi0QQFOTsLEzlGrslE2f4Z9VzHjWdE24MfmRd5d6XGhbxu6Xplc6__nAFZRMSvCLGYo18hlKWzN1fBMkbCzQwJzgrvoM4v3oaTPYb9OvphfrmU76fD4e2oX67voqBVAlWDh1AgjiltiLRAym8tFSHmc.-umLKUYDH2OfiW7Xk5TNxUjEsNGrUuTblmdlm8cR-us&dib_tag=se&keywords=Switch&qid=1792005517&sprefix=switch%2Caps%2C194&sr=8-2&th=1>) |
+| Emergency Stop | $11.99 | 1 | $11.99 | [Link](<https://www.amazon.com/mxuteuk-Mushroom-Emergency-Warranty-HB2-ES544/dp/B07R8PTTDX?crid=1TMFLUN683TG6&dib=eyJ2IjoiMSJ9.zJlYMxZHmYZJIkkElhAlIaFfh8fcJl-HQax35HoINBM8mxsyRX6Yzh6chrHzXHJgk0OGe1EHHLiPEezTVBiATJ5CgVOxW7LG1AIN_sjywBvA180X7eQOr3hGCOZVaXYxBS2uixKVjXHcjPayM63y5xfjbXCsAkTKD4pMrXQPBFUfjcrzD8SJzR9c2Stg7WJsPKJgRU9uk3WZg_ndRxue5p4vaWmZNXUmrNFCFhqTLtg.R9enb47Pfu3YGHnKaGykOpqFnw8_cCz8KHw2l8cY9II&dib_tag=se&keywords=Estop&qid=1792005743&sprefix=estop%2Caps%2C187&sr=8-2&th=1>) |
+| **TOTAL COST** | | | **$791.15** | |
 
 ### Division of Labor
 
