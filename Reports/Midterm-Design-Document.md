@@ -1148,31 +1148,34 @@ What guides the robot’s development and team practices is safety, reliability,
 
 ### Budget
 
-| Item | Expected Cost per Item | Expected Quantity | Expected Cost |
-|---|---:|---:|---:|
-| **Power System** | | | |
-| Lithium Battery | $50.00 | 1 | $50.00 |
-| Buck Converters (12V to 5V / 12V to 3.3V) | $13.00 | 2 | $26.00 |
-| **Master Controller** | | | |
-| Microcontroller Development Board | $80.00 | 1 | $80.00 |
-| PCB (w/ connectors & standoffs) | $80.00 | 1 | $80.00 |
-| **Camera / Vision Processing** | | | |
-| OpenMV N6 camera | $225.00 | 1 | $225.00 |
-| **Navigation Inputs** | | | |
-| Time-Of-Flight ranging sensor (for boundry detection) | $8.00 | 2 | $16.00 |
-| Matrix Distance Sensor (for obstacle detection) | $30.00 | 1 | $30.00 |
-| Tracking Wheel & Encoder (for odometry) | $80.00 | 2 | $160.00 |
-| QTRX-MD-08RC Reflectance Sensor Array | $18.00 | 1 | $18.00 |
-| **Flag & Tire Actuators** | | | |
-| Servo Motors | $11.67 | 5 | $58.33 |
-| Stepper Motor & Driver | $15.00 | 1 | $15.00 |
-| **Motor Control** | | | |
-| Motor | $15.00 | 4 | $60.00 |
-| Dual H Bridge Motor Driver | $13.00 | 2 | $26.00 |
-| **Miscellaneous** | | | |
-| Switches (emergency stop, start sutton, status LEDs) | $50.00 | 1 | $50.00 |
-| Wiring & integration | $40.00 | 1 | $40.00 |
-| **Estimated Total** | | | **$934.33** |
+# Expected Bill of Materials
+
+| Item | Expected Cost Per Item | Expected Quantity | Expected Cost | Link |
+| --- | ---: | ---: | ---: | --- |
+| 3S Lithium-ion Battery | $68.99 | 1 | $68.99 | [Link](<https://www.amazon.com/dp/B0CP5KYZXY/?coliid=I2F0U5KF6A0YXJ&colid=23D9XR7A5OVNN&psc=1&ref_=list_c_wl_lv_ov_lig_dp_it>) |
+| DC 12V/24V to 5V 15A Step Down Converter | $10.99 | 2 | $21.98 | [Link](<https://www.amazon.com/dp/B09X1ZGR38/?coliid=I2N4TJQCC03CC4&colid=23D9XR7A5OVNN&psc=1&ref_=list_c_wl_lv_ov_lig_dp_it>) |
+| **Master Controller** | | | | |
+| Microcontroller Development Board | $40.81 | 1 | $40.81 | [Link](<https://www.digikey.com/en/products/detail/stmicroelectronics/NUCLEO-H753ZI/21348937?msclkid=8055c840130b15cd06a6a2ae2597b0e8&gclid=8055c840130b15cd06a6a2ae2597b0e8&gclsrc=3p.ds&gad_source=7&gad_campaignid=21987963296>) |
+| PCB (w/ connectors & standoffs) | $80.00 | 1 | $80.00 |  |
+| **Camera / Vision Processing** | | | | |
+| OpenMV N6 camera | $225.00 | 1 | $225.00 | [Link](<https://www.amazon.com/dp/B0H8SSNBYK/?coliid=I864XICTG6T1R&colid=23D9XR7A5OVNN&psc=1&ref_=list_c_wl_lv_ov_lig_dp_it>) |
+| **Navigation Inputs** | | | | |
+| VL6180X TOF Distance Sensor Module | $9.99 | 2 | $19.98 | [Link](<https://www.amazon.com/dp/B0FKS84DJP/?coliid=I8K0V9OXX6862&colid=23D9XR7A5OVNN&psc=1&ref_=list_c_wl_lv_ov_lig_dp_it>) |
+| DFROBOT 8x8 Matrix Sensor | $22.00 | 1 | $22.00 | [Link](<https://www.amazon.com/dp/B0FS77NZRC/?coliid=IR5ZYA6FCPMWP&colid=23D9XR7A5OVNN&psc=1&ref_=list_c_wl_lv_ov_lig_dp_it>) |
+| AS5600 Magnetic Encoder | $9.99 | 1 | $9.99 | [Link](<https://www.amazon.com/dp/B0CM3C8KFT/?coliid=I194GEWTN6TZPK&colid=23D9XR7A5OVNN&psc=1&ref_=list_c_wl_lv_ov_lig_dp_it>) |
+| BNO080 Nine Axis Sensor Module | $20.49 | 1 | $20.49 | [Link](<https://www.amazon.com/dp/B0CDGZMLPP/?coliid=IHFNUV2UVEAI7&colid=23D9XR7A5OVNN&psc=1&ref_=list_c_wl_lv_ov_lig_dp_it>) |
+| **Flag & Tire Actuators** | | | | |
+| Servo Motors | $18.99 | 4 | $75.96 | [Link](<https://www.amazon.com/dp/B07MFK266B/?coliid=I34JEY8U5JI2Z0&colid=23D9XR7A5OVNN&ref_=list_c_wl_lv_ov_lig_dp_it&th=1>) |
+| DC 12V 550RPM Gear Motor High Torque | $14.99 | 1 | $14.99 | [Link](<https://www.amazon.com/dp/B072R5G5GR/?coliid=I2QVWDF9CQL7A6&colid=23D9XR7A5OVNN&ref_=list_c_wl_lv_ov_lig_dp_it&th=1>) |
+| **Motor Control** | | | | |
+| JGB37 520 DC12V Gear Motor With Encoder | $13.79 | 4 | $55.16 | [Link](<https://www.amazon.com/dp/B0H4FVPXDN/?coliid=I1HR7M7Y5KY96I&colid=23D9XR7A5OVNN&psc=1&ref_=list_c_wl_lv_ov_lig_dp_it>) |
+| Cytron Dual Channel 10A DC Motor Driver | $23.48 | 3 | $70.44 | [Link](<https://www.amazon.com/dp/B07CW34YRB/?coliid=IWW4P5ZHRKDYM&colid=23D9XR7A5OVNN&psc=1&ref_=list_c_wl_lv_ov_lig_dp_it>) |
+| **Miscellaneous** | | | | |
+| Wiring & integration | $40.00 | 1 | $40.00 |  |
+| Jumper Cables | $6.98 | 1 | $6.98 | [Link](<https://www.amazon.com/dp/B01EV70C78/?coliid=IYTOCWHZCEFWV&colid=23D9XR7A5OVNN&ref_=list_c_wl_lv_ov_lig_dp_it&th=1>) |
+| Start Switch | $6.39 | 1 | $6.39 | [Link](<https://www.amazon.com/DaierTek-Listed-Switches-Automotive-KCD1-5Pack/dp/B07S1MV462?crid=2LSV83X8HO8IP&dib=eyJ2IjoiMSJ9.p-nxYeYUIVoEfWAP69LmQLx2KPtjR7Tjo7XlyYHnyLzo2UjyTSmfLl7Mpjwugrn274QUvaEpLEB17lsXtgFEpi0QQFOTsLEzlGrslE2f4Z9VzHjWdE24MfmRd5d6XGhbxu6Xplc6__nAFZRMSvCLGYo18hlKWzN1fBMkbCzQwJzgrvoM4v3oaTPYb9OvphfrmU76fD4e2oX67voqBVAlWDh1AgjiltiLRAym8tFSHmc.-umLKUYDH2OfiW7Xk5TNxUjEsNGrUuTblmdlm8cR-us&dib_tag=se&keywords=Switch&qid=1792005517&sprefix=switch%2Caps%2C194&sr=8-2&th=1>) |
+| Emergency Stop | $11.99 | 1 | $11.99 | [Link](<https://www.amazon.com/mxuteuk-Mushroom-Emergency-Warranty-HB2-ES544/dp/B07R8PTTDX?crid=1TMFLUN683TG6&dib=eyJ2IjoiMSJ9.zJlYMxZHmYZJIkkElhAlIaFfh8fcJl-HQax35HoINBM8mxsyRX6Yzh6chrHzXHJgk0OGe1EHHLiPEezTVBiATJ5CgVOxW7LG1AIN_sjywBvA180X7eQOr3hGCOZVaXYxBS2uixKVjXHcjPayM63y5xfjbXCsAkTKD4pMrXQPBFUfjcrzD8SJzR9c2Stg7WJsPKJgRU9uk3WZg_ndRxue5p4vaWmZNXUmrNFCFhqTLtg.R9enb47Pfu3YGHnKaGykOpqFnw8_cCz8KHw2l8cY9II&dib_tag=se&keywords=Estop&qid=1792005743&sprefix=estop%2Caps%2C187&sr=8-2&th=1>) |
+| **TOTAL COST** | | | **$791.15** | |
 
 ### Division of Labor
 
