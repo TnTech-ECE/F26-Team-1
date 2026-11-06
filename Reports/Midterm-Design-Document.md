@@ -1246,8 +1246,7 @@ Subsystem Shall:
 
 * Document and test the implemented fault-detection functions
 
-<img width="692" height="839" alt="image" src="https://github.com/user-attachments/assets/10db6b5e-b4a0-4d05-8925-9236da2cae76" />
-
+<img width="700" alt="Power Subsystem Block Diagram" src="assets/power-subsystem-diagram.png" />
 
 ## Ethical, Professional, and Standards Considerations
 
