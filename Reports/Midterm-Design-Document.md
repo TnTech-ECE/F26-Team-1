@@ -568,7 +568,7 @@ Even with its processing drawbacks, the team has decided to move forward with th
 
 ### Operational Flow Chart
 
-<img width="1084" height="565" alt="SoutheastCon2027_StockCarRace_Robot_Flowchart(1)" src="https://github.com/user-attachments/assets/1a577fd8-2588-4e09-8323-e8b9927d89ad" />
+<img width="976" height="512" alt="image" src="https://github.com/user-attachments/assets/cca70062-86b6-47cd-94a2-d2cdaae6d8e4" />
 
 <img width="976" height="606" alt="image" src="https://github.com/user-attachments/assets/78cfb3d6-fde0-4bcc-a8a2-4992185679d2" />
 
@@ -650,11 +650,11 @@ STM32 Board NUCLEO
 
 STM32 Nucleo-H753ZI2 Development Board
 
-STM32 Nucleo boards are a good fit for RTOS projects: they're affordable, include an ST-LINK debugger/programmer, and offer expansion headers, which makes prototyping and debugging convenient. STM32CubeIDE also makes it easier to configure pins and create RTOS tasks, since it can generate the FreeRTOS (CMSIS-RTOS) scaffolding automatically [21].
+STM32 Nucleo boards are a good fit for RTOS projects: they're affordable, include an ST-LINK debugger/programmer, and offer expansion headers, which makes prototyping and debugging convenient. STM32CubeIDE also makes it easier to configure pins and create RTOS tasks, since it can generate the FreeRTOS (CMSIS-RTOS) scaffolding automatically [21]. 
 
 This development board exhibits varying power consumption depending on whether the entire board or only the microcontroller (MCU) core is measured. When the entire board is powered via USB or an external supply, typical current consumption ranges from 150 mA to over 250 mA (approximately 0.5 W to 0.8 W at 5V) due to auxiliary components like the integrated ST-LINK debugger, status LEDs, and the onboard Ethernet transceiver. For the isolated STM32H743ZI MCU core, power efficiency scales at roughly 275 µA/MHz under typical running conditions; when operating at its peak clock speed of 400 MHz to 480 MHz, the core itself draws between 110 mA and 130 mA [29].
 
-The main drawbacks of this board are its lack of camera and USB host support and the steep learning curve it presents for the team. The board has no dedicated CSI or DCMI camera connector and no USB host port, so connecting a CSI or USB camera would require extra hardware, such as an adapter board or external module, or a switch to a different platform, which limits its suitability for vision-based features. In addition, development on this MCU demands a significant amount of low-level knowledge, including clock tree configuration (RCC) and the PLL and prescaler calculations behind it, pin assignment and alternate-function mapping, NVIC interrupt priority setup, and timer configuration for PWM, capture, and similar modes. These tasks are error-prone, and a small mistake such as a wrong clock divider or interrupt priority can cause subtle, hard-to-debug problems, which increases onboarding time and project risk, especially for team members new to embedded systems. These issues can be reduced by using STM32CubeMX or CubeIDE to generate the configuration code, relying on HAL or LL drivers, and preparing short internal guides and templates, while camera needs could be met with a board that has a built-in camera interface or a companion module such as an ESP32-CAM or Raspberry Pi.
+The main drawbacks of this board are its lack of camera and USB host support and the steep learning curve it presents for the team. The board has no dedicated CSI or DCMI camera connector and no USB host port, so connecting a CSI or USB camera would require extra hardware, such as an adapter board or external module, or a switch to a different platform, which limits its suitability for vision-based features. In addition, development on this MCU demands a significant amount of low-level knowledge, including clock tree configuration (RCC) and the PLL and prescaler calculations behind it, pin assignment and alternate-function mapping, NVIC interrupt priority setup, and timer configuration for PWM, capture, and similar modes. These tasks are error-prone, and a small mistake such as a wrong clock divider or interrupt priority can cause subtle, hard-to-debug problems, which increases onboarding time and project risk, especially for team members new to embedded systems. A NUCLEO-N657X0-Q was considered as an alternative developement board due to it's built-in support for a CSI camera, however using an external camera module to process image data will allow for higher-level languages to be used for development. Camera needs could be met with a board that has a built-in camera interface or a companion module such as an OpenMV camera or Raspberry Pi.
 
 Teensy Development Board
 
@@ -745,15 +745,15 @@ Together, the exponential ramp and PID control give the robot smooth, predictabl
 
 To meet the vision input & processing requirements of the proposed solution, the camera system shall meet the following requirements:
 
-Identify 68x68 mm AprilTags from a distance 2 – 12 inches (estimate based on course dimensions [2])
+* Identify 68x68 mm AprilTags from a distance 2 – 12 inches (estimate based on course dimensions [2])
 
-Identify the lowering of the green start flag
+* Identify the lowering of the green start flag
 
-Identify the location of the blue tire
+* Identify the location of the blue tire
 
 #### Proposed Solutions
 
-###### Single Board Computer (SBC) + CSI Camera
+##### Single Board Computer (SBC) + CSI Camera
 
 This proposed solution uses an SBC running Linux with a CSI-connected camera. The SBC could either act as the main navigation control and interface with a microcontroller to control motors and actuators; or it could act as a dedicated vision processing unit, sending results over UART to the microcontroller-based master controller. Both cases are considered in the previous section on Master Control. This section will only consider the SBC as a vision processing unit. A Raspberry Pi computer and an official CSI Raspberry Pi camera module will be considered for this proposed solution, given their popularity and extensive documentation / community support.
 
@@ -761,16 +761,16 @@ Precedents exist for using a Raspberry Pi 4/5 and CSI camera for AprilTag detect
 
 Running a general-purpose operating system introduces risks that a dedicated vision camera avoids. Longer boot time from an SBC adds to pre-match setup. Abrupt power loss can corrupt the SD card filesystem, which would have to be accounted for in design of emergency stop button. A Raspberry Pi would also require assembling the OS, camera pipeline, libraries, and startup services. Running a general-purpose operating system on an autonomous robot can also be affected by software deployment issues, which may require a learning curve given the team’s inexperience with high-level software development. Using a Raspberry Pi can also cause a delayed response due to image processing. These shortcomings could be justified if the solution required the computing power of an SBC for navigation. Since navigation is handled elsewhere and the SBC would perform only vision tasks, the added integration risk is difficult to justify.
 
-A Raspberry Pi 4B with 4GB of RAM would be sufficient for this approach [7]. To ensure proper lighting, a button lamp should be included in camera subsystem.
+A Raspberry Pi 5 with 4GB of RAM would be sufficient for this approach [7]. To ensure proper lighting, a button lamp should be included in camera subsystem.
 
-| Part | Cost | Link |
+| Part | Cost | Source |
 | --- | --- | --- |
-| Raspberry Pi 4B (4GB RAM) Kit | $169.99 | Amazon |
+| Raspberry Pi 5 (4GB RAM) Kit | $209.99 | Amazon |
 | Raspberry Pi Camera Module 3 Wide | $36.00 | Amazon |
 | Button Lamp | $5.99 | Amazon |
-| ESTIMATED TOTAL COST | $211.98 | $211.98 |
+| ESTIMATED TOTAL COST | $251.90 |
 
-###### OpenMV Camera
+##### OpenMV Camera
 
 This proposed solution uses a dedicated smart vision module that performs image processing on-board and sends the results to the main controller. OpenMV smart camera running MicroPython. It would perform on-board AprilTag decoding and color blob detection for the three tasks. Results go over a UART link to the main controller, which handles motor and actuator control.
 
@@ -780,12 +780,22 @@ The main drawbacks for using an OpenMV camera would be the lack of precedent. An
 
 The OpenMV N6 board would be most suitable for the task, given it’s more powerful processor, swappable camera module, and convenient peripheral access with jumper wire headers [11]. The OpenMV AE6 could be a viable lower-budget choice. While it isn’t as computationally powerful as and lacks swappable camera module, it does include an 8x8 time-of-flight sensor, which could aid in obstacle detection [12]. To ensure proper lighting, a button lamp should be included in camera subsystem.
 
-| Part | Cost | Link |
+| Part | Cost | Source |
 | --- | --- | --- |
 | OpenMV N6 | $195.00 | OpenMV |
 | OpenMV AE3 | $150.00 | OpenMV |
 | Button Lamp | $5.99 | Amazon |
-| ESTIMATED TOTAL COST | $155.99 – $200.99 | $155.99 – $200.99 |
+| ESTIMATED TOTAL COST | $155.99 – $200.99 |
+
+##### Pros & Cons
+| Criterion | Raspberry Pi 5 + CSI Camera | OpenMV Camera (N6 or AE6) |
+| --- | --- | --- |
+| **Pros** | - Established precedent for AprilTag and color detection in autonomous robots<br>- Extensive documentation and community support<br>- Mature libraries (Picamera2, OpenCV)<br>- Flexible choice of official camera modules<br>- Compute headroom, so it could also host navigation control<br>- Direct CSI connection is the best option if a dedicated compute module is the master controller | - Simple integration, since AprilTag and color detection ship in the firmware and IDE<br>- Runs a script from flash, so there is no OS boot delay<br>- No SD card filesystem to corrupt on abrupt power loss, which simplifies emergency stop design<br>- Low power draw (under 0.75 W at 5 V)<br>- Lower software complexity, which suits the team's limited high-level software experience<br>- N6 offers a more powerful processor, swappable lenses, and convenient jumper-wire header access<br>- AE6 includes an 8x8 time-of-flight sensor that could aid obstacle detection<br>- Results are sent to the main controller over UART |
+| **Cons** | - General-purpose OS increases pre-match setup time through longer boot<br>- Abrupt power loss can corrupt the SD card filesystem, which must be handled in the emergency stop design<br>- Requires assembling the OS, camera pipeline, libraries, and startup services<br>- Software deployment issues and a learning curve given the team's inexperience<br>- Image processing can cause delayed response<br>- Extra computing power is unnecessary when navigation is handled elsewhere, so the integration risk is hard to justify | - Less precedent in autonomous competition robots<br>- Less documentation and community support than Raspberry Pi<br>- Lower computing power, so it is not suited to advanced navigation control<br>- Fewer camera options than CSI modules |
+
+#### Chosen Solution
+
+Given that the microcontroller-based master controller toplogy has been selected over the SBC + LLC topology, the OpenMV Camera module has been selected over an SBC + CSI camera. The OpenMV camera performs the required vision tasks on-board using firmware-integrated AprilTag and color detection, then sends results to the master controller over UART. This avoids the added integration risk of an SBC, namely OS boot delay, SD card corruption on abrupt power loss, and a software deployment learning curve. The extra compute of an SBC would go unused, since navigation is not allocated to the vision subsystem.
 
 ### Flag Raising & Tire-Changing Actuators
 
