@@ -698,6 +698,8 @@ Several time-constrained tasks benefit from RTOS. A motor control loop, such as 
 
 ### Motor Control – Ty
 
+#### Hardware
+
 For the robot to move consistently and accurately during the competition, we need to design reliable way to control the speed and direction of each motor. We are looking at using 12V brushed DC gearmotors that have built-in encoder. The microcontroller will generate a pulse-width modulation (PWM) signal, and the driver will switch the 12V battery to supply to the motor at that duty cycle, which controls how fast the motor spins. The encoder reports how far the shaft shas turned, which allows for the microcontroller to loop back into the system to ensure that each motor is doing what it is commanded to do and is correct in real time. Instead of designing our own driver circuit, we will be using a pre-made motor-driver board. These boards are already built and tested, which saves design time, reduces the risk of a power circuit failure, and lets us replace a damaged driver quickly during the competition.
 
 The simplest approach to driving a DC motor is a simple MOSFET switching the motor on and off. This approach is cheap and easy to build; however, it only lets the motor spin in one direction and cannot actively brake. Since the robot will need to have the motors move clockwise and counterclockwise to effectively use the proposed mechanisms wheels, this option is too limited for our design.
@@ -709,13 +711,29 @@ Another option is the BTS7960 driver module, which is a high-current single-chan
 <img width="348" height="348" alt="image" src="https://github.com/user-attachments/assets/68453c5e-5395-4831-8861-5497498b674d" />
 <img width="345" height="345" alt="image" src="https://github.com/user-attachments/assets/bcf1b75b-0454-4881-9565-681b8f683f44" />
 
+
 Left: Cytron MDD10A Motor Driver
 
 Right: BTS7960 Motor Driver Module
 
-Rather than simply turning the motors completely on or off, we will be controlling them with two different layers of software: an exponential ramp that shapes how the robot speeds up and slows down, and a PID controller that makes each motor follow that ramp accurately.
+When comparing these different options, other features other than functionality are also appealing when using these parts for the robot. When looking at the 
 
-When the robot is commanded to a new speed, if we were to jump straight to it, there would be a large current spike from the battery, put stress on the gearboxes, and could make the wheels slip or the robot move off course. To prevent this, we will use an exponential ramp. Each time the control loop runs, the speed setpoint moves a fixed fraction of the remaining distance toward the target speed:
+| Motor Driver Option | Advantages | Disadvantages | Suitability |
+|---|---|---|---|
+| **MOSFET Switching Circuit** | Low cost, simple design, easy to implement. | Only supports one direction of rotation and cannot actively brake the motor. | Not suitable because the robot requires bidirectional motor control. |
+| **Vytron MDD10A** | Dual-channel H-bridge; drives both motors with one board; high current capacity; simple PWM and direction control; compatible with 3.3V logic. | Less current-sensing capability compared to the BTS7960. | Highly suitable due to its compact design, simple wiring, and ability to drive both motors. |
+| **BTS7960** | High current capacity; supports bidirectional control and braking; includes current-sense pins; inexpensive and readily available. | Single-channel design requires two boards; physically larger; increases wiring complexity. | Suitable, but requires more space and wiring than the MDD10A. |
+
+#### Software
+
+*Rather than simply turning the motors completely on or off, we will be controlling them with two different layers of software: an exponential ramp that shapes how the robot speeds up and slows down, and a PID controller that makes each motor follow that ramp accurately.*
+
+Rather than simply turning the motors completely on or off, there are two differnt potential ways to control the motors: an exponential ramp that shapes how the robot speeds up and slows down, or a PID controller that makes each motor follow that ramp accurately.
+
+With an exponential ramp that can be programmed, it in simply a open-loop control system as there is no sensors determining the speed as the motors would be controlled soley on a time-based mathematical trajectory. The motors would change fast at first movement, then slow down asymptotically. With this follwing a pre-caluclated curve, there can be be different disturbances from other electronics or the playing field, which the motor speed would not change. This device however is simple to impliment, as there is not really any truning required, but a time-constant rate would neeed to be chosen.
+
+When the robot is commanded to a new speed, if we were to jump straight to it, there would be a large current spike from the battery, put stress on the gearboxes, and could make the wheels slip or the robot move off course. 
+To prevent this, we will use an exponential ramp. Each time the control loop runs, the speed setpoint moves a fixed fraction of the remaining distance toward the target speed:
 
 New Setpoint = Current Setpoint + k * (Target Speed – Current Setpoint)
 
