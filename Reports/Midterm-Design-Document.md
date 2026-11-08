@@ -590,12 +590,9 @@ The final connector that we looked at was a JST connector, which is very similar
 <img width="250" height="250" alt="image" src="https://github.com/user-attachments/assets/c1ce2386-69fd-4dab-90ba-3715f5c1e059" />
 <img width="250" height="250" alt="image" src="https://github.com/user-attachments/assets/b225e4af-afea-4e77-a982-378492b9c880" />
 
-
-Left: Screw Terminal Connector
-
-Middle: Molex KK Connector
-
-Right: JST Connector
+*Left: Screw Terminal Connector*
+*Middle: Molex KK Connector*
+*Right: JST Connector*
 
 To connect the battery that is going to power all devices on the robot, we would need to ensure a stable and consistent connection to the motors, to supply constant power to the microcontroller development board, and to power different sensors and other peripherals that are on the robot.
 
@@ -704,25 +701,28 @@ For the robot to move consistently and accurately during the competition, we nee
 
 The simplest approach to driving a DC motor is a simple MOSFET switching the motor on and off. This approach is cheap and easy to build; however, it only lets the motor spin in one direction and cannot actively brake. Since the robot will need to have the motors move clockwise and counterclockwise to effectively use the proposed mechanisms wheels, this option is too limited for our design.
 
-A better option is using a premade H-bridge motor driver, which lets current flow through the motor in either direction and supports braking. One option is the Vytron MDD10A, a dual channel driver that can run both motors from one board. It is rated well above the current our motors would normally draw, which gives is a margin if the robot gets pushed or stalls during a round. It is controlled by one PWM pin and one direction pin per motor, which allows for the wiring from the microcontroller to be kept simple, and it will work with the 3.3V logic, which allows for a direct connect to the microcontroller board without extra steps.
+A better option is using a premade H-bridge motor driver, which lets current flow through the motor in either direction and supports braking. One option is the Cytron MDD10A, a dual channel driver that can run both motors from one board. It is rated well above the current our motors would normally draw, which gives is a margin if the robot gets pushed or stalls during a round. It is controlled by one PWM pin and one direction pin per motor, which allows for the wiring from the microcontroller to be kept simple, and it will work with the 3.3V logic, which allows for a direct connect to the microcontroller board without extra steps.
 
 Another option is the BTS7960 driver module, which is a high-current single-channel H-bridge board that is easily available and inexpensive. It does have a far higher current capacity than our motors need, which makes it very tolerant of stalls and sudden loads. It also has current-sense pins which can be used to monitor the motor load. The tradeoff is that each module only drives one motor and is physically large, so it would take up more space on the robot and increase the number of wires.
 
 <img width="348" height="348" alt="image" src="https://github.com/user-attachments/assets/68453c5e-5395-4831-8861-5497498b674d" />
 <img width="345" height="345" alt="image" src="https://github.com/user-attachments/assets/bcf1b75b-0454-4881-9565-681b8f683f44" />
 
+*Left: Cytron MDD10A Motor Driver*
 
-Left: Cytron MDD10A Motor Driver
+*Right: BTS7960 Motor Driver Module*
 
-Right: BTS7960 Motor Driver Module
+When comparing these different options, other features other than functionality are also appealing when using these parts for the robot. When looking at the constraints of the competition in relation to the size constraint of 12"x12"x12", we need different devices that do not take up a lot of space on the robot. Using MOSTFETs for the design would require a lot of testing to incorporate the design from scratch and ensure that it would work consistently during the competition. The Cytron MDD101A motor driver does have this lower profile when compared to the BTS7960, which makes it more appealing for the design when looking at size constraints.
 
-When comparing these different options, other features other than functionality are also appealing when using these parts for the robot. When looking at the 
+With this, a table was made in order to help distinguish the advatages, disadvantages, and the suitability of each of the three ways to control the motors below:
 
 | Motor Driver Option | Advantages | Disadvantages | Suitability |
 |---|---|---|---|
 | **MOSFET Switching Circuit** | Low cost, simple design, easy to implement. | Only supports one direction of rotation and cannot actively brake the motor. | Not suitable because the robot requires bidirectional motor control. |
-| **Vytron MDD10A** | Dual-channel H-bridge; drives both motors with one board; high current capacity; simple PWM and direction control; compatible with 3.3V logic. | Less current-sensing capability compared to the BTS7960. | Highly suitable due to its compact design, simple wiring, and ability to drive both motors. |
+| **Cytron MDD10A** | Dual-channel H-bridge; drives both motors with one board; high current capacity; simple PWM and direction control; compatible with 3.3V logic. | Less current-sensing capability compared to the BTS7960. | Highly suitable due to its compact design, simple wiring, and ability to drive both motors. |
 | **BTS7960** | High current capacity; supports bidirectional control and braking; includes current-sense pins; inexpensive and readily available. | Single-channel design requires two boards; physically larger; increases wiring complexity. | Suitable, but requires more space and wiring than the MDD10A. |
+
+Overall based on the points that the table addresses, the Cytron MDD10A as it is a low profile H-bridge motor driver that will supply 10A continuously and has a motor supply voltage of 5V to 30V, which allows for a wide variety of DC motor types.
 
 #### Software
 
@@ -732,7 +732,7 @@ Rather than simply turning the motors completely on or off, there are two differ
 
 With an exponential ramp that can be programmed, it in simply a open-loop control system as there is no sensors determining the speed as the motors would be controlled soley on a time-based mathematical trajectory. The motors would change fast at first movement, then slow down asymptotically. With this follwing a pre-caluclated curve, there can be be different disturbances from other electronics or the playing field, which the motor speed would not change. This device however is simple to impliment, as there is not really any truning required, but a time-constant rate would neeed to be chosen.
 
-When the robot is commanded to a new speed, if we were to jump straight to it, there would be a large current spike from the battery, put stress on the gearboxes, and could make the wheels slip or the robot move off course. 
+When the robot is commanded to a new speed, if we were to jump straight to it, there would be a large current spike from the battery, put stress on the gearboxes, and could make the wheels slip or the robot move off course.
 To prevent this, we will use an exponential ramp. Each time the control loop runs, the speed setpoint moves a fixed fraction of the remaining distance toward the target speed:
 
 New Setpoint = Current Setpoint + k * (Target Speed – Current Setpoint)
