@@ -1552,7 +1552,7 @@ Each team member will still be responsible for managing a subsystem and its deta
 
 ### Timeline
 
-<img width="973" height="415" alt="image" src="https://github.com/user-attachments/assets/3ae154d7-cacb-4d33-b559-f596ad78aadf" />
+<img width="1292" height="519" alt="Capstone2" src="https://github.com/user-attachments/assets/2b201af2-ad3f-4d46-847e-8588753258a8" />
 
 ## References
 
