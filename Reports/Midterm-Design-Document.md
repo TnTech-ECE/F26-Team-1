@@ -594,12 +594,9 @@ The final connector that we looked at was a JST connector, which is very similar
 <img width="250" height="250" alt="image" src="https://github.com/user-attachments/assets/c1ce2386-69fd-4dab-90ba-3715f5c1e059" />
 <img width="250" height="250" alt="image" src="https://github.com/user-attachments/assets/b225e4af-afea-4e77-a982-378492b9c880" />
 
-
-Left: Screw Terminal Connector
-
-Middle: Molex KK Connector
-
-Right: JST Connector
+*Left: Screw Terminal Connector*
+*Middle: Molex KK Connector*
+*Right: JST Connector*
 
 To connect the battery that is going to power all devices on the robot, we would need to ensure a stable and consistent connection to the motors, to supply constant power to the microcontroller development board, and to power different sensors and other peripherals that are on the robot.
 
@@ -802,44 +799,81 @@ The proposed solution is to use the NUCLEO-H753ZI development board. It provides
 
 ### Motor Control
 
+#### Hardware
+
 For the robot to move consistently and accurately during the competition, we need to design reliable way to control the speed and direction of each motor. We are looking at using 12V brushed DC gearmotors that have built-in encoder. The microcontroller will generate a pulse-width modulation (PWM) signal, and the driver will switch the 12V battery to supply to the motor at that duty cycle, which controls how fast the motor spins. The encoder reports how far the shaft shas turned, which allows for the microcontroller to loop back into the system to ensure that each motor is doing what it is commanded to do and is correct in real time. Instead of designing our own driver circuit, we will be using a pre-made motor-driver board. These boards are already built and tested, which saves design time, reduces the risk of a power circuit failure, and lets us replace a damaged driver quickly during the competition.
 
 The simplest approach to driving a DC motor is a simple MOSFET switching the motor on and off. This approach is cheap and easy to build; however, it only lets the motor spin in one direction and cannot actively brake. Since the robot will need to have the motors move clockwise and counterclockwise to effectively use the proposed mechanisms wheels, this option is too limited for our design.
 
-A better option is using a premade H-bridge motor driver, which lets current flow through the motor in either direction and supports braking. One option is the Vytron MDD10A, a dual channel driver that can run both motors from one board. It is rated well above the current our motors would normally draw, which gives is a margin if the robot gets pushed or stalls during a round. It is controlled by one PWM pin and one direction pin per motor, which allows for the wiring from the microcontroller to be kept simple, and it will work with the 3.3V logic, which allows for a direct connect to the microcontroller board without extra steps.
+A better option is using a premade H-bridge motor driver, which lets current flow through the motor in either direction and supports braking. One option is the Cytron MDD10A, a dual channel driver that can run both motors from one board. It is rated well above the current our motors would normally draw, which gives is a margin if the robot gets pushed or stalls during a round. It is controlled by one PWM pin and one direction pin per motor, which allows for the wiring from the microcontroller to be kept simple, and it will work with the 3.3V logic, which allows for a direct connect to the microcontroller board without extra steps.
 
 Another option is the BTS7960 driver module, which is a high-current single-channel H-bridge board that is easily available and inexpensive. It does have a far higher current capacity than our motors need, which makes it very tolerant of stalls and sudden loads. It also has current-sense pins which can be used to monitor the motor load. The tradeoff is that each module only drives one motor and is physically large, so it would take up more space on the robot and increase the number of wires.
 
-<img width="348" height="348" alt="image" src="https://github.com/user-attachments/assets/68453c5e-5395-4831-8861-5497498b674d" />
-<img width="345" height="345" alt="image" src="https://github.com/user-attachments/assets/bcf1b75b-0454-4881-9565-681b8f683f44" />
+><img width="348" height="348" alt="image" src="https://github.com/user-attachments/assets/68453c5e-5395-4831-8861-5497498b674d" />
+><img width="345" height="345" alt="image" src="https://github.com/user-attachments/assets/bcf1b75b-0454-4881-9565-681b8f683f44" />
+>
+>*Left: Cytron MDD10A Motor Driver*
+>
+>*Right: BTS7960 Motor Driver Module*
 
-Left: Cytron MDD10A Motor Driver
+When comparing these different options, other features other than functionality are also appealing when using these parts for the robot. When looking at the constraints of the competition in relation to the size constraint of 12"x12"x12", we need different devices that do not take up a lot of space on the robot. Using MOSTFETs for the design would require a lot of testing to incorporate the design from scratch and ensure that it would work consistently during the competition. The Cytron MDD101A motor driver does have this lower profile when compared to the BTS7960, which makes it more appealing for the design when looking at size constraints.
 
-Right: BTS7960 Motor Driver Module
+With this, a table was made in order to help distinguish the advatages, disadvantages, and the suitability of each of the three ways to control the motors below:
 
-Rather than simply turning the motors completely on or off, we will be controlling them with two different layers of software: an exponential ramp that shapes how the robot speeds up and slows down, and a PID controller that makes each motor follow that ramp accurately.
+| Motor Driver Option | Advantages | Disadvantages | Suitability |
+|---|---|---|---|
+| **MOSFET Switching Circuit** | Low cost, simple design, easy to implement. | Only supports one direction of rotation and cannot actively brake the motor. | Not suitable because the robot requires bidirectional motor control. |
+| **Cytron MDD10A** | Dual-channel H-bridge; drives both motors with one board; high current capacity; simple PWM and direction control; compatible with 3.3V logic. | Less current-sensing capability compared to the BTS7960. | Highly suitable due to its compact design, simple wiring, and ability to drive both motors. |
+| **BTS7960** | High current capacity; supports bidirectional control and braking; includes current-sense pins; inexpensive and readily available. | Single-channel design requires two boards; physically larger; increases wiring complexity. | Suitable, but requires more space and wiring than the MDD10A. |
 
-When the robot is commanded to a new speed, if we were to jump straight to it, there would be a large current spike from the battery, put stress on the gearboxes, and could make the wheels slip or the robot move off course. To prevent this, we will use an exponential ramp. Each time the control loop runs, the speed setpoint moves a fixed fraction of the remaining distance toward the target speed:
+Overall based on the points that the table addresses, the Cytron MDD10A as it is a low profile H-bridge motor driver that will supply 10A continuously and has a motor supply voltage of 5V to 30V, which allows for a wide variety of DC motor types.
+
+#### Software
+
+Rather than simply turning the motors completely on or off, there are two different potential ways to control the motors: an exponential ramp that shapes how the robot speeds up and slows down, or a PID controller that makes each motor follow that ramp accurately.
+
+With an exponential ramp that can be programmed, it is simply an open-loop control system as there are no sensors determining the speed, as the motors would be controlled solely on a time-based mathematical trajectory. The motors would change fast at first movement, then slow down asymptotically. With this following a pre-calculated curve, there can be different disturbances from other electronics or the playing field, which the motor speed would not change. This method however is simple to implement, as there is not really any tuning required, but a time-constant rate would need to be chosen.
+
+When the robot is commanded to a new speed, if we were to jump straight to it, there would be a large current spike from the battery, put stress on the gearboxes, and could make the wheels slip or the robot move off course.
+To prevent this, we will use an exponential ramp. Each time the control loop runs, the speed setpoint moves a fixed fraction of the remaining distance toward the target speed:
 
 New Setpoint = Current Setpoint + k * (Target Speed – Current Setpoint)
 
 Here, k is a constant value between zero and one that we can tune to adjust the speed. When the robot is far from its target speed, the setpoint will change quickly, and as it gets closer, the changes become progressively smaller, allowing for the motors to ease smoothly into the final speed. The same method applies when slowing down, so the robot decelerates gradually instead of stopping abruptly, which helps it to stop accurately without overshooting or tipping. A larger value of k makes the robot more responsive, while a smaller value makes it smoother. This lets us balance quick reactions against smooth, controlled motion during testing.
 
-The ramp determines what speed each motor should be running at, and a PID (proportional-integral-derivative) controller makes sure each motor reaches that speed. The microcontroller has hardware timers that read quadrature encoders directly, so the microcontroller can measure each motor’s real speed without slowing down the rest of the program. At a fixed rate, the controller calculates the error between the ramped setpoint and the measured speed, then adjusts the PWM duty cycle using three terms:
+The ramp determines what speed each motor should be running at, and a PID (proportional-integral-derivative) controller makes sure each motor reaches that speed. At a fixed rate, the controller calculates the error between the ramped setpoint and the measured speed, then adjusts the PWM duty cycle using three terms:
 
-Proportional (P): Corrects in proportion to the current error. A larger error produces a stronger correction.
+- Proportional (P): Corrects in proportion to the current error. A larger error produces a stronger correction.
 
-Integral (I): Builds up over time to remove small, steady errors, such as a motor that consistently runs slightly slow because of friction or a dropping battery voltage.
+- Integral (I): Builds up over time to remove small, steady errors, such as a motor that consistently runs slightly slow because of friction or a dropping battery voltage.
 
-Derivative (D): reacts to how quickly the error is changing, which reduces overshoot and oscillation.
+- Derivative (D): Reacts to how quickly the error is changing, which reduces overshoot and oscillation.
 
-<img width="623" height="332" alt="image" src="https://github.com/user-attachments/assets/20286d9d-f90b-4b5a-a027-546b66ad13fc" />
+><img width="623" height="332" alt="image" src="https://github.com/user-attachments/assets/20286d9d-f90b-4b5a-a027-546b66ad13fc" />
+>
+>*Example diagram of a PID controller*
 
-Example diagram of a PID controller
+#### Converting Encoder Pulses to Speed
 
-Each term has a gain that we will tune through testing the robot on the competition surface. We will also be limiting the integral term so that there isn’t too much build up when a motor is being stalled out or the output is already at pull power, which would otherwise cause the motor to overshoot once it is free to move. Since all of the motors are needing to be controlled independently, the PID loops will keep the robot driving straight even if one motor is slightly weaker than the other.
+The motor encoders don't output speed directly. Each one produces two square-wave signals (channels A and B), offset 90° from each other, with a fixed number of pulses per revolution of the motor shaft. To get the measured speed y(t) that the PID loop compares against the ramped setpoint, the controller first counts these pulses and then turns the count into a speed.
 
-Together, the exponential ramp and PID control give the robot smooth, predictable acceleration and deceleration while keeping each motor at its intended speed. This reduces wear on the motors and gearboxes, limits current spikes on the battery, and makes the robot’s movement consistent from round to round. The motor drivers will mount to the robot frame or onto mounting holes on the PCB, which will then be connected using the specified connectors defined in that section. This allows for motor wiring to be short and secure, and lets us swap out a driver quickly if one fails during the competition.
+Each motor's encoder channels connect to a hardware timer on the microcontroller set to encoder mode. In this mode the timer counts both the rising and falling edges of both channels (4× decoding), so we get four counts for every encoder pulse. The timer counts up when the motor spins forward and down when it spins in reverse, which means the count tracks both how far the shaft has turned and which way. All of this happens in hardware, so it uses no processor time and no pulses are missed, even at high motor speeds. Because each motor needs its own timer, a requirement for choosing the microcontroller is that it has at least one encoder-capable hardware timer per motor, plus a separate timer to generate the fixed-rate interrupt that runs the PID loop. If the microcontroller doesn't have enough timers that support encoder mode, the encoders could be read with pin-change interrupts instead. That method uses processor time on every pulse and could miss counts at high speeds, so dedicated hardware timers are preferred.
+
+To get speed, the controller reads each timer's count at the same fixed rate the PID loop runs at, using a sample period T_s. It subtracts the previous reading to find how many counts happened during that period, then converts the result to the output shaft's speed:
+
+> ω[n] = (C[n] − C[n−1]) / (4 x N_PPR x G x T_s)  [rev/s]
+
+Here C[n] is the current timer count, N_PPR is the number of encoder pulses per motor revolution, and G is the gearbox ratio. If we want the robot's linear speed, the wheel speed is v = 2πr x ω, where r is the wheel radius. Because the sample period is fixed by a timer interrupt, T_s stays constant and the speed calculation stays accurate. The hardware counters have a limited size and eventually wrap around. We handle this by doing the subtraction as a signed integer of the same width as the counter. That gives the correct result as long as the number of counts in one sample period stays under half the counter's range. We will confirm this holds once the motor and encoder are selected.
+
+This counting method has one limitation: at low speeds, only a few counts happen during each period, so the measured speed jumps in discrete steps. The smallest speed change we can resolve is one count per sample period, or 1 / (4 x N_PPR x G x T_s) rev/s. A higher-resolution encoder, a larger gear ratio, or a longer sample period all improve this, but a longer sample period also slows down the PID loop's response. We will make this tradeoff once the motor and encoder are selected. To smooth out the steps, we pass the measured speed through a simple first-order low-pass filter before it reaches the PID controller:
+
+> y[n] = α x ω[n] + (1 − α) x y[n−1]
+
+Here α is between zero and one. A smaller α gives a smoother signal but adds delay. This filtering matters most for the derivative term, which would otherwise amplify the step-to-step noise in the speed measurement. We will tune α together with the PID gains during testing. If low-speed accuracy turns out to be a problem, the timers can also run in input-capture mode, which measures the time between encoder edges instead of counting edges in a fixed window. That method is more accurate at low speeds.
+
+Each term has a gain that we will tune through testing the robot on the competition surface. We will also be limiting the integral term so that there isn't too much build up when a motor is being stalled out or the output is already at full power, which would otherwise cause the motor to overshoot once it is free to move. Since all of the motors are needing to be controlled independently, the PID loops will keep the robot driving straight even if one motor is slightly weaker than the other.
+
+Together, the exponential ramp and PID control give the robot smooth, predictable acceleration and deceleration while keeping each motor at its intended speed. This reduces wear on the motors and gearboxes, limits current spikes on the battery, and makes the robot's movement consistent from round to round. The motor drivers will mount to the robot frame or onto mounting holes on the PCB, which will then be connected using the specified connectors defined in that section. This allows for motor wiring to be short and secure, and lets us swap out a driver quickly if one fails during the competition.
 
 ### Vision Input & Processing
 
