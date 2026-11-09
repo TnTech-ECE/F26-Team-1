@@ -569,7 +569,7 @@ Even with its processing drawbacks, the team has decided to move forward with th
 
 ### Operational Flow Chart
 
-<img width="976" height="512" alt="image" src="https://github.com/user-attachments/assets/cca70062-86b6-47cd-94a2-d2cdaae6d8e4" />
+<img width="1084" height="565" alt="SoutheastCon2027_StockCarRace_Robot_Flowchart(1)" src="https://github.com/user-attachments/assets/b7b361c0-f937-4022-bcc2-baad84e4f49d" />
 
 <img width="976" height="606" alt="image" src="https://github.com/user-attachments/assets/78cfb3d6-fde0-4bcc-a8a2-4992185679d2" />
 
